@@ -224,6 +224,31 @@
   border-color: rgba(83, 252, 24, 0.4);
 }
 
+.sp-btn-swap {
+  display: none;
+}
+
+.sp-window.sp-tiled .sp-btn-swap {
+  display: inline-flex;
+}
+
+.sp-btn-swap svg {
+  display: none;
+}
+
+.sp-btn-swap.sp-swap-h .sp-icon-swap-h,
+.sp-btn-swap.sp-swap-v .sp-icon-swap-v,
+.sp-btn-swap.sp-swap-promote .sp-icon-promote,
+.sp-btn-swap.sp-swap-cycle .sp-icon-cycle {
+  display: block;
+}
+
+.sp-btn-swap:hover {
+  color: #53fc18;
+  background: rgba(83, 252, 24, 0.18);
+  border-color: rgba(83, 252, 24, 0.4);
+}
+
 .sp-btn-size {
   padding: 0 6px;
   font-size: 10px;

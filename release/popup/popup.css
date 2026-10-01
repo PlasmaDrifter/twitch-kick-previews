@@ -284,7 +284,9 @@ input[type="range"]::-moz-range-thumb {
 .shortcuts-footer {
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
   padding-top: 8px;
   padding-bottom: 2px;
   border-top: 1px solid var(--border-color);
@@ -294,7 +296,7 @@ input[type="range"]::-moz-range-thumb {
 .shortcut-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   font-size: 11px;
   color: var(--text-secondary);
 }

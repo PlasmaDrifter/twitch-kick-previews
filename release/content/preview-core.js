@@ -32,6 +32,7 @@
       this.volumeSlider = null;
       this.pinBtn = null;
       this.togetherBtn = null;
+      this.swapBtn = null;
       this.sizeBtn = null;
       this.closeBtn = null;
 
@@ -57,6 +58,12 @@
             </button>
             <button class="sp-btn sp-btn-together" type="button" title="Play Together (Fill Screen)">
               <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg>
+            </button>
+            <button class="sp-btn sp-btn-swap" type="button" title="Swap Position (S)">
+              <svg class="sp-icon-swap-h" viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+              <svg class="sp-icon-swap-v" viewBox="0 0 24 24"><path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"/></svg>
+              <svg class="sp-icon-promote" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+              <svg class="sp-icon-cycle" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
             </button>
             <button class="sp-btn sp-btn-size" type="button" title="Cycle Size"></button>
             <button class="sp-btn sp-btn-close" type="button" title="Close (Esc)">
@@ -85,6 +92,7 @@
       this.volumeSlider = container.querySelector(".sp-volume-slider");
       this.pinBtn = container.querySelector(".sp-btn-pin");
       this.togetherBtn = container.querySelector(".sp-btn-together");
+      this.swapBtn = container.querySelector(".sp-btn-swap");
       this.sizeBtn = container.querySelector(".sp-btn-size");
       this.closeBtn = container.querySelector(".sp-btn-close");
 
@@ -126,6 +134,11 @@
       this.togetherBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         this.core.togglePlayTogether();
+      });
+
+      this.swapBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.core.handleSwapWindow(this);
       });
 
       this.sizeBtn.addEventListener("click", (e) => {
@@ -439,6 +452,9 @@
       });
 
       window.addEventListener("keydown", (e) => {
+        const tag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : "";
+        if (tag === "input" || tag === "textarea" || (e.target && e.target.isContentEditable)) return;
+
         const hoverActive = this.hoverWindow && this.hoverWindow.container && this.hoverWindow.container.classList.contains("sp-visible");
         const activeWin = hoverActive ? this.hoverWindow : (this.activeWindow || Array.from(this.pinnedWindows).pop());
 
@@ -457,6 +473,15 @@
         } else if (e.key === "t" || e.key === "T") {
           if (this.pinnedWindows.size >= 2) {
             this.togglePlayTogether();
+          }
+        } else if (e.key === "s" || e.key === "S") {
+          if (this.isTiled && this.pinnedWindows.size >= 2) {
+            const targetWin = (this.activeWindow && this.pinnedWindows.has(this.activeWindow))
+              ? this.activeWindow
+              : Array.from(this.pinnedWindows)[0];
+            if (targetWin) {
+              this.handleSwapWindow(targetWin);
+            }
           }
         }
       });
@@ -518,6 +543,44 @@
       this.updatePlayTogetherButtons();
     }
 
+    reorderPinnedWindows(newList) {
+      this.pinnedWindows.clear();
+      for (const w of newList) {
+        this.pinnedWindows.add(w);
+      }
+      this.updateTiledLayout();
+    }
+
+    handleSwapWindow(win) {
+      if (!this.isTiled || this.pinnedWindows.size < 2) return;
+      const pinned = Array.from(this.pinnedWindows);
+      const idx = pinned.indexOf(win);
+      if (idx === -1) return;
+
+      if (pinned.length === 2) {
+        this.reorderPinnedWindows([pinned[1], pinned[0]]);
+      } else if (pinned.length === 3) {
+        if (idx === 0) {
+          this.reorderPinnedWindows([pinned[0], pinned[2], pinned[1]]);
+        } else {
+          const newOrder = [...pinned];
+          newOrder[0] = win;
+          newOrder[idx] = pinned[0];
+          this.reorderPinnedWindows(newOrder);
+        }
+      } else if (pinned.length >= 4) {
+        if (idx === 0) {
+          const [w0, w1, w2, w3] = pinned;
+          this.reorderPinnedWindows([w2, w0, w3, w1]);
+        } else {
+          const newOrder = [...pinned];
+          newOrder[0] = win;
+          newOrder[idx] = pinned[0];
+          this.reorderPinnedWindows(newOrder);
+        }
+      }
+    }
+
     updatePlayTogetherButtons() {
       const showBtn = this.pinnedWindows.size >= 2;
       for (const win of this.pinnedWindows) {
@@ -569,6 +632,30 @@
         }
 
         win.container.classList.add("sp-tiled");
+
+        if (win.swapBtn) {
+          win.swapBtn.classList.remove("sp-swap-h", "sp-swap-v", "sp-swap-promote", "sp-swap-cycle");
+          if (count === 2) {
+            win.swapBtn.classList.add("sp-swap-h");
+            win.swapBtn.title = "Swap Sides (S)";
+          } else if (count === 3) {
+            if (i === 0) {
+              win.swapBtn.classList.add("sp-swap-v");
+              win.swapBtn.title = "Swap Side Streams (S)";
+            } else {
+              win.swapBtn.classList.add("sp-swap-promote");
+              win.swapBtn.title = "Promote to Main Stage (S)";
+            }
+          } else {
+            if (i === 0) {
+              win.swapBtn.classList.add("sp-swap-cycle");
+              win.swapBtn.title = "Cycle Positions (S)";
+            } else {
+              win.swapBtn.classList.add("sp-swap-promote");
+              win.swapBtn.title = "Promote to Main Stage (S)";
+            }
+          }
+        }
 
         let left = 0, top = 0, w = halfW, h = halfH;
 
