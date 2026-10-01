@@ -1,0 +1,15 @@
+# Exclude local test environment (only release files are published)
+test/
+
+# Package archives and build artifacts
+*.zip
+*.xpi
+web-ext-artifacts/
+
+# System & editor files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*~

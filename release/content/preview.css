@@ -1,0 +1,294 @@
+/* Stream Previews Overlay Styling */
+
+.sp-window {
+  position: fixed;
+  z-index: 2147483646;
+  background-color: #0e0e10;
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: Inter, Roobert, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.sp-window.sp-visible {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.sp-pinned-window {
+  z-index: 2147483647;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(145, 70, 255, 0.7);
+}
+
+/* Play Together Tiled Layout */
+.sp-window.sp-tiled {
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 8px 30px rgba(0, 0, 0, 0.9);
+  transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+
+.sp-window.sp-tiled .sp-body {
+  height: calc(100% - 34px);
+  aspect-ratio: unset;
+  flex: 1;
+}
+
+.sp-window.sp-tiled .sp-btn-size {
+  display: none;
+}
+
+.sp-header {
+  height: 34px;
+  background: #18181b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  gap: 8px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  cursor: grab;
+}
+
+.sp-header.sp-dragging {
+  cursor: grabbing;
+}
+
+.sp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  min-width: 0;
+  pointer-events: none;
+}
+
+/* Subtle colored dot indicator */
+.sp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sp-dot.twitch {
+  background-color: #9146ff;
+  box-shadow: 0 0 8px rgba(145, 70, 255, 0.8);
+}
+
+.sp-dot.kick {
+  background-color: #53fc18;
+  box-shadow: 0 0 8px rgba(83, 252, 24, 0.8);
+}
+
+.sp-channel-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #efeff1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-header-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+/* Individual Volume Controls */
+.sp-volume-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 0 6px 0 2px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  height: 24px;
+  box-sizing: border-box;
+}
+
+.sp-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 55px;
+  height: 6px;
+  background: #3f3f46;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.sp-volume-group.sp-unmuted .sp-volume-slider {
+  background: linear-gradient(to right, #53fc18 var(--vol-fill, 80%), #3f3f46 var(--vol-fill, 80%));
+}
+
+.sp-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  border: none;
+}
+
+.sp-volume-slider::-moz-range-track {
+  background: transparent;
+  border: none;
+  height: 6px;
+}
+
+.sp-volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.sp-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #adadb8;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  min-width: 24px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.sp-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.sp-btn:active {
+  transform: scale(0.95);
+}
+
+.sp-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.sp-btn-audio.sp-audio-active {
+  color: #53fc18;
+}
+
+.sp-btn-pin.sp-pinned-active {
+  color: #9146ff;
+  background: rgba(145, 70, 255, 0.2);
+  border-color: rgba(145, 70, 255, 0.4);
+}
+
+.sp-btn-together {
+  display: none;
+}
+
+.sp-btn-together.sp-visible-btn {
+  display: inline-flex;
+}
+
+.sp-btn-together.sp-together-active {
+  color: #53fc18;
+  background: rgba(83, 252, 24, 0.2);
+  border-color: rgba(83, 252, 24, 0.4);
+}
+
+.sp-btn-size {
+  padding: 0 6px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.sp-btn-size:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.sp-btn-close:hover {
+  background: rgba(235, 4, 0, 0.2);
+  color: #ff4f4d;
+}
+
+.sp-body {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #000000;
+  overflow: hidden;
+}
+
+.sp-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+body.sp-dragging-active .sp-iframe {
+  pointer-events: none !important;
+}
+
+.sp-loader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #09090b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+.sp-loader.sp-loaded {
+  opacity: 0;
+}
+
+.sp-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #9146ff;
+  border-radius: 50%;
+  animation: sp-spin 0.7s linear infinite;
+}
+
+@keyframes sp-spin {
+  to { transform: rotate(360deg); }
+}

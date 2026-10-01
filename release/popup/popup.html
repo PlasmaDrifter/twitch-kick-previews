@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Previews</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="header">
+      <div class="brand">
+        <img class="logo-icon" src="../icons/icon-32.png" alt="Logo">
+        <h1>Stream Previews</h1>
+      </div>
+      <span class="version">v0.5.2</span>
+    </header>
+
+    <main class="content">
+      <!-- Preview Size -->
+      <section class="section">
+        <label class="section-title">
+          <span>Preview Window Size</span>
+          <span id="sizeDisplay" class="value-badge">480 &times; 270 px</span>
+        </label>
+        
+        <div class="preset-buttons">
+          <button type="button" class="preset-btn" data-width="360">360p</button>
+          <button type="button" class="preset-btn active" data-width="480">480p</button>
+          <button type="button" class="preset-btn" data-width="640">640p</button>
+          <button type="button" class="preset-btn" data-width="800">800p</button>
+        </div>
+
+        <div class="slider-wrapper">
+          <input type="range" id="sizeSlider" min="280" max="960" step="20" value="480">
+        </div>
+      </section>
+
+      <!-- Audio Options -->
+      <section class="section">
+        <span class="section-title">Audio & Sound</span>
+        
+        <label class="toggle-row">
+          <span class="toggle-label">Mute previews by default</span>
+          <input type="checkbox" id="defaultMuted" checked>
+          <span class="switch"></span>
+        </label>
+
+        <div class="slider-group" id="volumeGroup">
+          <label class="slider-title">
+            <span>Volume</span>
+            <span id="volumeDisplay" class="value-badge">80%</span>
+          </label>
+          <div class="slider-wrapper">
+            <input type="range" id="volumeSlider" min="5" max="100" step="5" value="80">
+          </div>
+        </div>
+      </section>
+
+      <!-- Hover Delay -->
+      <section class="section">
+        <label class="section-title">
+          <span>Hover Trigger Delay</span>
+          <span id="delayDisplay" class="value-badge">300 ms</span>
+        </label>
+        <div class="slider-wrapper">
+          <input type="range" id="delaySlider" min="100" max="1000" step="50" value="300">
+        </div>
+      </section>
+
+      <!-- Platforms -->
+      <section class="section">
+        <span class="section-title">Active Platforms</span>
+        <div class="platforms-grid">
+          <label class="toggle-row platform-row">
+            <span class="toggle-label platform-label twitch">
+              <span class="dot twitch-dot"></span> Twitch
+            </span>
+            <input type="checkbox" id="enabledTwitch" checked>
+            <span class="switch"></span>
+          </label>
+
+          <label class="toggle-row platform-row">
+            <span class="toggle-label platform-label kick">
+              <span class="dot kick-dot"></span> Kick
+            </span>
+            <input type="checkbox" id="enabledKick" checked>
+            <span class="switch"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Shortcuts Guide -->
+      <footer class="shortcuts-footer">
+        <div class="shortcut-item"><kbd>M</kbd> <span>Sound</span></div>
+        <div class="shortcut-item"><kbd>P</kbd> <span>Pin</span></div>
+        <div class="shortcut-item"><kbd>T</kbd> <span>Together</span></div>
+        <div class="shortcut-item"><kbd>Esc</kbd> <span>Close</span></div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

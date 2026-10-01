@@ -1,0 +1,99 @@
+{
+  "manifest_version": 3,
+  "name": "Stream Previews (Twitch & Kick)",
+  "version": "0.5.2",
+  "description": "Lightweight live video hover previews for Twitch and Kick with adjustable size, sound controls, multi-pin overlays, and Play Together grid tiling.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.twitch.tv/*",
+    "*://*.kick.com/*",
+    "https://player.twitch.tv/*",
+    "https://player.kick.com/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png"
+    },
+    "default_title": "Stream Previews"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "stream-previews@jmc.addons",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.twitch.tv/*"
+      ],
+      "exclude_matches": [
+        "https://player.twitch.tv/*"
+      ],
+      "js": [
+        "content/preview-core.js",
+        "content/twitch.js"
+      ],
+      "css": [
+        "content/preview.css"
+      ],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "*://*.kick.com/*"
+      ],
+      "exclude_matches": [
+        "https://player.kick.com/*"
+      ],
+      "js": [
+        "content/preview-core.js",
+        "content/kick.js"
+      ],
+      "css": [
+        "content/preview.css"
+      ],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "https://player.twitch.tv/*",
+        "https://player.kick.com/*"
+      ],
+      "js": [
+        "content/player-frame.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*",
+        "content/*"
+      ],
+      "matches": [
+        "*://*.twitch.tv/*",
+        "*://*.kick.com/*"
+      ]
+    }
+  ]
+}
