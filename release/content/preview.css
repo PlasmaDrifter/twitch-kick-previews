@@ -46,6 +46,10 @@
   display: none;
 }
 
+.sp-window.sp-tiled .sp-header {
+  cursor: default;
+}
+
 .sp-header {
   height: 34px;
   background: #18181b;

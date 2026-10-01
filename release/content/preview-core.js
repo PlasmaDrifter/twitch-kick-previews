@@ -126,6 +126,14 @@
         this.sendAudioMessage();
       });
 
+      this.volumeGroup.addEventListener("pointerdown", (e) => {
+        e.stopPropagation();
+      });
+
+      this.volumeGroup.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+      });
+
       this.volumeSlider.addEventListener("pointerdown", (e) => {
         e.stopPropagation();
       });
@@ -240,7 +248,8 @@
       };
 
       this.header.addEventListener("pointerdown", (e) => {
-        if (e.target.closest("button") || e.target.closest("input") || e.button !== 0) return;
+        if (this.core.isTiled) return;
+        if (e.target.closest(".sp-header-right") || e.target.closest("button") || e.target.closest("input") || e.target.closest(".sp-volume-group") || e.button !== 0) return;
         isDragging = true;
         hasMoved = false;
         startX = e.clientX;
