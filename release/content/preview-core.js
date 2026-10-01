@@ -639,7 +639,7 @@
       const H = window.innerHeight;
       const gap = 4;
 
-      const DISTINCT_COLORS = ["#9146ff", "#53fc18", "#00e5ff", "#ff7538"];
+      const DISTINCT_COLORS = ["#9146ff", "#22c55e", "#00e5ff", "#ff7538"];
       const borderEnabled = this.config.tiledBorderEnabled !== false;
       const borderMode = this.config.tiledBorderMode || "distinct";
       const customColor = this.config.tiledBorderCustomColor || "#9146ff";
@@ -669,7 +669,7 @@
           } else if (borderMode === "custom") {
             borderColor = customColor;
           } else if (borderMode === "green") {
-            borderColor = "#53fc18";
+            borderColor = "#22c55e";
           } else if (borderMode === "cyan") {
             borderColor = "#00e5ff";
           } else if (borderMode === "orange") {

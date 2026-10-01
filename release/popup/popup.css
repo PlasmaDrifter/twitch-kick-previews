@@ -6,7 +6,7 @@
   --bg-card: #202025;
   --bg-hover: #2a2a32;
   --accent-purple: #9146ff;
-  --accent-green: #53fc18;
+  --accent-green: #22c55e;
   --text-primary: #efeff1;
   --text-secondary: #adadb8;
   --border-color: rgba(255, 255, 255, 0.09);
@@ -330,7 +330,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .swatch-distinct {
-  background: conic-gradient(#9146ff 0deg 90deg, #53fc18 90deg 180deg, #ff7538 180deg 270deg, #00e5ff 270deg 360deg);
+  background: conic-gradient(#9146ff 0deg 90deg, #22c55e 90deg 180deg, #ff7538 180deg 270deg, #00e5ff 270deg 360deg);
 }
 
 .swatch-custom-wrapper {

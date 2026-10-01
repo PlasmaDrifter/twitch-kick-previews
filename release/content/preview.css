@@ -91,8 +91,8 @@
 }
 
 .sp-dot.kick {
-  background-color: #53fc18;
-  box-shadow: 0 0 8px rgba(83, 252, 24, 0.8);
+  background-color: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
 }
 
 .sp-channel-name {
@@ -116,10 +116,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
-  padding: 0 6px 0 2px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  padding: 0 2px 0 0;
+  border: none;
   height: 24px;
   box-sizing: border-box;
 }
@@ -139,7 +138,7 @@
 }
 
 .sp-volume-group.sp-unmuted .sp-volume-slider {
-  background: linear-gradient(to right, #53fc18 var(--vol-fill, 80%), #3f3f46 var(--vol-fill, 80%));
+  background: linear-gradient(to right, #22c55e var(--vol-fill, 80%), #3f3f46 var(--vol-fill, 80%));
 }
 
 .sp-volume-slider::-webkit-slider-thumb {
@@ -205,13 +204,27 @@
 }
 
 .sp-btn-audio.sp-audio-active {
-  color: #53fc18;
+  color: #22c55e;
+}
+
+.sp-btn-pin svg {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
 }
 
 .sp-btn-pin.sp-pinned-active {
-  color: #9146ff;
-  background: rgba(145, 70, 255, 0.2);
-  border-color: rgba(145, 70, 255, 0.4);
+  color: #a970ff;
+  background: transparent;
+  border-color: transparent;
+}
+
+.sp-btn-pin.sp-pinned-active svg {
+  transform: rotate(45deg);
+}
+
+.sp-btn-pin.sp-pinned-active:hover {
+  background: rgba(145, 70, 255, 0.15);
+  color: #c499ff;
 }
 
 .sp-btn-together {
@@ -223,9 +236,14 @@
 }
 
 .sp-btn-together.sp-together-active {
-  color: #53fc18;
-  background: rgba(83, 252, 24, 0.2);
-  border-color: rgba(83, 252, 24, 0.4);
+  color: #22c55e;
+  background: transparent;
+  border-color: transparent;
+}
+
+.sp-btn-together.sp-together-active:hover {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
 }
 
 .sp-btn-swap {
@@ -253,9 +271,9 @@
 }
 
 .sp-btn-swap:hover {
-  color: #53fc18;
-  background: rgba(83, 252, 24, 0.2);
-  border-color: rgba(83, 252, 24, 0.4);
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.35);
 }
 
 .sp-btn-size {
