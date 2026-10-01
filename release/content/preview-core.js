@@ -424,7 +424,10 @@
         previewWidth: 480,
         hoverDelayMs: 300,
         defaultMuted: true,
-        defaultVolume: 0.8
+        defaultVolume: 0.8,
+        tiledBorderEnabled: true,
+        tiledBorderMode: "distinct",
+        tiledBorderCustomColor: "#9146ff"
       };
 
       this.hoverWindow = null;
@@ -458,6 +461,9 @@
             for (const win of this.pinnedWindows) {
               win.applySize(this.config.previewWidth);
             }
+          }
+          if ((changes.tiledBorderEnabled || changes.tiledBorderMode || changes.tiledBorderCustomColor) && this.isTiled) {
+            this.updateTiledLayout();
           }
         });
       }
@@ -615,6 +621,7 @@
         for (const win of pinned) {
           win.container.classList.remove("sp-tiled");
           win.container.style.height = "";
+          win.container.style.boxShadow = "";
           if (win.savedFloatingRect) {
             win.container.style.left = win.savedFloatingRect.left;
             win.container.style.top = win.savedFloatingRect.top;
@@ -631,6 +638,11 @@
       const W = window.innerWidth;
       const H = window.innerHeight;
       const gap = 4;
+
+      const DISTINCT_COLORS = ["#9146ff", "#53fc18", "#00e5ff", "#ff7538"];
+      const borderEnabled = this.config.tiledBorderEnabled !== false;
+      const borderMode = this.config.tiledBorderMode || "distinct";
+      const customColor = this.config.tiledBorderCustomColor || "#9146ff";
 
       const halfW = Math.floor((W - (gap * 3)) / 2);
       const fullH = Math.floor(H - (gap * 2));
@@ -649,6 +661,29 @@
         }
 
         win.container.classList.add("sp-tiled");
+
+        let borderColor = "";
+        if (borderEnabled) {
+          if (borderMode === "distinct") {
+            borderColor = DISTINCT_COLORS[i % DISTINCT_COLORS.length];
+          } else if (borderMode === "custom") {
+            borderColor = customColor;
+          } else if (borderMode === "green") {
+            borderColor = "#53fc18";
+          } else if (borderMode === "cyan") {
+            borderColor = "#00e5ff";
+          } else if (borderMode === "orange") {
+            borderColor = "#ff7538";
+          } else {
+            borderColor = "#9146ff";
+          }
+        }
+
+        if (borderColor) {
+          win.container.style.boxShadow = `0 0 0 2px ${borderColor}, 0 8px 30px rgba(0, 0, 0, 0.9)`;
+        } else {
+          win.container.style.boxShadow = "";
+        }
 
         if (win.swapBtn) {
           win.swapBtn.classList.remove("sp-swap-h", "sp-swap-v", "sp-swap-promote", "sp-swap-cycle");

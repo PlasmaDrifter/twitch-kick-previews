@@ -57,6 +57,37 @@
         </div>
       </section>
 
+      <!-- Dual+ Multi-View Borders -->
+      <section class="section">
+        <label class="toggle-row">
+          <span class="toggle-label">Dual+ Colored Borders</span>
+          <input type="checkbox" id="tiledBorderEnabled" checked>
+          <span class="switch"></span>
+        </label>
+
+        <div class="color-options-row" id="tiledBorderOptions">
+          <button type="button" class="swatch-btn active" data-mode="distinct" title="Distinct (Multi-color per stream)">
+            <span class="swatch-preview swatch-distinct"></span>
+          </button>
+          <button type="button" class="swatch-btn" data-mode="purple" data-color="#9146ff" title="Twitch Purple">
+            <span class="swatch-preview" style="background-color: #9146ff;"></span>
+          </button>
+          <button type="button" class="swatch-btn" data-mode="green" data-color="#53fc18" title="Kick Green">
+            <span class="swatch-preview" style="background-color: #53fc18;"></span>
+          </button>
+          <button type="button" class="swatch-btn" data-mode="cyan" data-color="#00e5ff" title="Electric Cyan">
+            <span class="swatch-preview" style="background-color: #00e5ff;"></span>
+          </button>
+          <button type="button" class="swatch-btn" data-mode="orange" data-color="#ff7538" title="Neon Orange">
+            <span class="swatch-preview" style="background-color: #ff7538;"></span>
+          </button>
+          <label class="swatch-btn swatch-custom-wrapper" title="Custom Color">
+            <input type="color" id="tiledBorderCustomColor" value="#9146ff">
+            <span class="swatch-preview swatch-custom-indicator" id="customColorIndicator" style="background-color: #9146ff;"></span>
+          </label>
+        </div>
+      </section>
+
       <!-- Hover Delay -->
       <section class="section">
         <label class="section-title">
