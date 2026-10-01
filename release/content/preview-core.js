@@ -49,23 +49,31 @@
             <span class="sp-channel-name"></span>
           </div>
           <div class="sp-header-right">
-            <div class="sp-volume-group">
-              <button class="sp-btn sp-btn-audio" type="button" title="Unmute (M)"></button>
-              <input type="range" class="sp-volume-slider" min="0" max="100" step="2" value="80" title="Volume">
-            </div>
             <button class="sp-btn sp-btn-pin" type="button" title="Pin / Detach (P)">
               <svg viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
             </button>
             <button class="sp-btn sp-btn-together" type="button" title="Play Together (Fill Screen)">
               <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg>
             </button>
-            <button class="sp-btn sp-btn-swap" type="button" title="Swap Position (S)">
-              <svg class="sp-icon-swap-h" viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
-              <svg class="sp-icon-swap-v" viewBox="0 0 24 24"><path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"/></svg>
-              <svg class="sp-icon-promote" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-              <svg class="sp-icon-cycle" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
-            </button>
             <button class="sp-btn sp-btn-size" type="button" title="Cycle Size"></button>
+            <button class="sp-btn sp-btn-swap" type="button" title="Swap Position (S)">
+              <svg class="sp-icon-swap-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 8h16M15 4l5 4-5 4M20 16H4M9 12l-5 4 5 4"/>
+              </svg>
+              <svg class="sp-icon-swap-v" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 20V4M4 9l4-5 4 5M16 4v16M12 15l4 5 4-5"/>
+              </svg>
+              <svg class="sp-icon-promote" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 12H4M11 19l-7-7 7-7"/>
+              </svg>
+              <svg class="sp-icon-cycle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-2.64-6.36L21 8M21 3v5h-5"/>
+              </svg>
+            </button>
+            <div class="sp-volume-group">
+              <button class="sp-btn sp-btn-audio" type="button" title="Unmute (M)"></button>
+              <input type="range" class="sp-volume-slider" min="0" max="100" step="2" value="80" title="Volume">
+            </div>
             <button class="sp-btn sp-btn-close" type="button" title="Close (Esc)">
               <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>

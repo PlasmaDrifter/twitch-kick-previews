@@ -226,6 +226,7 @@
 
 .sp-btn-swap {
   display: none;
+  color: #efeff1;
 }
 
 .sp-window.sp-tiled .sp-btn-swap {
@@ -234,6 +235,10 @@
 
 .sp-btn-swap svg {
   display: none;
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
 }
 
 .sp-btn-swap.sp-swap-h .sp-icon-swap-h,
@@ -245,7 +250,7 @@
 
 .sp-btn-swap:hover {
   color: #53fc18;
-  background: rgba(83, 252, 24, 0.18);
+  background: rgba(83, 252, 24, 0.2);
   border-color: rgba(83, 252, 24, 0.4);
 }
 
