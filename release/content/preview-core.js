@@ -49,11 +49,11 @@
             <span class="sp-channel-name"></span>
           </div>
           <div class="sp-header-right">
-            <button class="sp-btn sp-btn-pin" type="button" title="Pin / Detach (P)">
-              <svg viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
-            </button>
             <button class="sp-btn sp-btn-together" type="button" title="Play Together (Fill Screen)">
               <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg>
+            </button>
+            <button class="sp-btn sp-btn-pin" type="button" title="Pin / Detach (P)">
+              <svg viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
             </button>
             <button class="sp-btn sp-btn-size" type="button" title="Cycle Size"></button>
             <button class="sp-btn sp-btn-swap" type="button" title="Swap Position (S)">
