@@ -69,6 +69,12 @@
               <svg class="sp-icon-cycle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12a9 9 0 1 1-2.64-6.36L21 8M21 3v5h-5"/>
               </svg>
+              <svg class="sp-icon-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="7" height="7" rx="1"/>
+              </svg>
             </button>
             <div class="sp-volume-group">
               <button class="sp-btn sp-btn-audio" type="button" title="Unmute (M)"></button>
@@ -76,6 +82,27 @@
             </div>
             <button class="sp-btn sp-btn-close" type="button" title="Close (Esc)">
               <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="sp-slot-picker">
+          <div class="sp-slot-title">Move to Slot</div>
+          <div class="sp-slot-grid">
+            <button type="button" class="sp-slot-btn" data-slot="0" title="Top-Left (1)">
+              <span class="sp-slot-name">TL</span>
+              <span class="sp-slot-num">1</span>
+            </button>
+            <button type="button" class="sp-slot-btn" data-slot="1" title="Top-Right (2)">
+              <span class="sp-slot-name">TR</span>
+              <span class="sp-slot-num">2</span>
+            </button>
+            <button type="button" class="sp-slot-btn" data-slot="2" title="Bottom-Left (3)">
+              <span class="sp-slot-name">BL</span>
+              <span class="sp-slot-num">3</span>
+            </button>
+            <button type="button" class="sp-slot-btn" data-slot="3" title="Bottom-Right (4)">
+              <span class="sp-slot-name">BR</span>
+              <span class="sp-slot-num">4</span>
             </button>
           </div>
         </div>
@@ -103,6 +130,30 @@
       this.swapBtn = container.querySelector(".sp-btn-swap");
       this.sizeBtn = container.querySelector(".sp-btn-size");
       this.closeBtn = container.querySelector(".sp-btn-close");
+      this.slotPicker = container.querySelector(".sp-slot-picker");
+
+      const slotBtns = this.slotPicker.querySelectorAll(".sp-slot-btn");
+      slotBtns.forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const slotIdx = parseInt(btn.dataset.slot, 10);
+          this.core.moveStreamToSlot(this, slotIdx);
+          this.closeSlotPicker();
+        });
+        btn.addEventListener("pointerdown", (e) => {
+          e.stopPropagation();
+        });
+        btn.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+      });
+
+      this.slotPicker.addEventListener("pointerdown", (e) => {
+        e.stopPropagation();
+      });
+      this.slotPicker.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+      });
 
       this.applySize(this.width);
       this.updateAudioButtonUI();
@@ -154,6 +205,10 @@
 
       this.swapBtn.addEventListener("click", (e) => {
         e.stopPropagation();
+        if (this.core.isTiled && this.core.pinnedWindows.size >= 4) {
+          this.toggleSlotPicker();
+          return;
+        }
         this.core.handleSwapWindow(this);
       });
 
@@ -195,6 +250,8 @@
     setupHeaderDrag() {
       let isDragging = false;
       let hasMoved = false;
+      let isTiledDrag = false;
+      let currentDropTarget = null;
       let startX = 0, startY = 0;
       let initLeft = 0, initTop = 0;
 
@@ -204,34 +261,62 @@
         const dy = e.clientY - startY;
 
         if (!hasMoved) {
-          if (Math.hypot(dx, dy) < 4) return;
+          if (Math.hypot(dx, dy) < 6) return;
           hasMoved = true;
           this.header.classList.add("sp-dragging");
           document.body.classList.add("sp-dragging-active");
 
-          if (this.core.isTiled) {
-            this.core.isTiled = false;
-            this.core.updateTiledLayout();
-          }
+          if (isTiledDrag) {
+            this.container.classList.add("sp-drag-source");
+            this.core.closeAllSlotPickers();
+          } else {
+            if (this.core.isTiled) {
+              this.core.isTiled = false;
+              this.core.updateTiledLayout();
+            }
 
-          if (!this.isPinned) {
-            this.core.promoteToPinned(this);
+            if (!this.isPinned) {
+              this.core.promoteToPinned(this);
+            }
           }
         }
 
-        const newW = this.container.offsetWidth;
-        const newH = this.container.offsetHeight;
-        const clampedX = Math.max(4, Math.min(window.innerWidth - newW - 4, initLeft + dx));
-        const clampedY = Math.max(4, Math.min(window.innerHeight - newH - 4, initTop + dy));
+        if (isTiledDrag) {
+          const x = e.clientX;
+          const y = e.clientY;
+          let foundTarget = null;
+          for (const otherWin of this.core.pinnedWindows) {
+            if (otherWin === this) continue;
+            const r = otherWin.container.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+              foundTarget = otherWin;
+              break;
+            }
+          }
 
-        this.container.style.left = `${clampedX}px`;
-        this.container.style.top = `${clampedY}px`;
+          if (foundTarget !== currentDropTarget) {
+            if (currentDropTarget) {
+              currentDropTarget.container.classList.remove("sp-drop-target");
+            }
+            currentDropTarget = foundTarget;
+            if (currentDropTarget) {
+              currentDropTarget.container.classList.add("sp-drop-target");
+            }
+          }
+        } else {
+          const newW = this.container.offsetWidth;
+          const newH = this.container.offsetHeight;
+          const clampedX = Math.max(4, Math.min(window.innerWidth - newW - 4, initLeft + dx));
+          const clampedY = Math.max(4, Math.min(window.innerHeight - newH - 4, initTop + dy));
+
+          this.container.style.left = `${clampedX}px`;
+          this.container.style.top = `${clampedY}px`;
+        }
       };
 
       const onPointerEnd = (e) => {
         if (!isDragging) return;
         isDragging = false;
-        hasMoved = false;
 
         try {
           if (this.header.hasPointerCapture(e.pointerId)) {
@@ -240,18 +325,34 @@
         } catch (_) {}
 
         this.header.classList.remove("sp-dragging");
+        this.container.classList.remove("sp-drag-source");
         document.body.classList.remove("sp-dragging-active");
 
         this.header.removeEventListener("pointermove", onPointerMove);
         this.header.removeEventListener("pointerup", onPointerEnd);
         this.header.removeEventListener("pointercancel", onPointerEnd);
+
+        for (const w of this.core.pinnedWindows) {
+          w.container.classList.remove("sp-drop-target");
+        }
+
+        if (isTiledDrag && hasMoved && currentDropTarget) {
+          const target = currentDropTarget;
+          currentDropTarget = null;
+          this.core.swapPinnedWindows(this, target);
+        }
+
+        currentDropTarget = null;
+        hasMoved = false;
+        isTiledDrag = false;
       };
 
       this.header.addEventListener("pointerdown", (e) => {
-        if (this.core.isTiled) return;
-        if (e.target.closest(".sp-header-right") || e.target.closest("button") || e.target.closest("input") || e.target.closest(".sp-volume-group") || e.button !== 0) return;
+        if (e.target.closest(".sp-header-right") || e.target.closest("button") || e.target.closest("input") || e.target.closest(".sp-volume-group") || e.target.closest(".sp-slot-picker") || e.button !== 0) return;
         isDragging = true;
         hasMoved = false;
+        isTiledDrag = this.core.isTiled && this.core.pinnedWindows.size >= 2;
+        currentDropTarget = null;
         startX = e.clientX;
         startY = e.clientY;
 
@@ -269,6 +370,37 @@
         this.header.addEventListener("pointerup", onPointerEnd);
         this.header.addEventListener("pointercancel", onPointerEnd);
       });
+    }
+
+    openSlotPicker() {
+      if (!this.slotPicker) return;
+      this.core.closeAllSlotPickers(this);
+      const pinned = Array.from(this.core.pinnedWindows);
+      const currentSlot = pinned.indexOf(this);
+      const buttons = this.slotPicker.querySelectorAll(".sp-slot-btn");
+      buttons.forEach((btn) => {
+        const slotIdx = parseInt(btn.dataset.slot, 10);
+        btn.classList.toggle("sp-slot-current", slotIdx === currentSlot);
+      });
+      this.slotPicker.classList.add("sp-visible");
+    }
+
+    closeSlotPicker() {
+      if (this.slotPicker) {
+        this.slotPicker.classList.remove("sp-visible");
+      }
+    }
+
+    toggleSlotPicker() {
+      if (this.isSlotPickerOpen()) {
+        this.closeSlotPicker();
+      } else {
+        this.openSlotPicker();
+      }
+    }
+
+    isSlotPickerOpen() {
+      return !!(this.slotPicker && this.slotPicker.classList.contains("sp-visible"));
     }
 
     applySize(width) {
@@ -468,6 +600,12 @@
         });
       }
 
+      document.addEventListener("pointerdown", (e) => {
+        if (!e.target.closest(".sp-slot-picker") && !e.target.closest(".sp-btn-swap")) {
+          this.closeAllSlotPickers();
+        }
+      });
+
       window.addEventListener("resize", () => {
         if (this.isTiled) {
           this.updateTiledLayout();
@@ -484,6 +622,15 @@
         if (!activeWin && !this.isTiled) return;
 
         if (e.key === "Escape") {
+          let pickerClosed = false;
+          for (const win of this.pinnedWindows) {
+            if (win.isSlotPickerOpen && win.isSlotPickerOpen()) {
+              win.closeSlotPicker();
+              pickerClosed = true;
+            }
+          }
+          if (pickerClosed) return;
+
           if (this.isTiled) {
             this.togglePlayTogether();
           } else if (activeWin) {
@@ -504,6 +651,16 @@
               : Array.from(this.pinnedWindows)[0];
             if (targetWin) {
               this.handleSwapWindow(targetWin);
+            }
+          }
+        } else if (["1", "2", "3", "4"].includes(e.key)) {
+          if (this.isTiled && this.pinnedWindows.size >= 4) {
+            const targetWin = (this.activeWindow && this.pinnedWindows.has(this.activeWindow))
+              ? this.activeWindow
+              : Array.from(this.pinnedWindows)[0];
+            if (targetWin) {
+              const slotIdx = parseInt(e.key, 10) - 1;
+              this.moveStreamToSlot(targetWin, slotIdx);
             }
           }
         }
@@ -566,12 +723,44 @@
       this.updatePlayTogetherButtons();
     }
 
+    closeAllSlotPickers(exceptWin = null) {
+      for (const win of this.pinnedWindows) {
+        if (win !== exceptWin && win.closeSlotPicker) {
+          win.closeSlotPicker();
+        }
+      }
+    }
+
     reorderPinnedWindows(newList) {
+      this.closeAllSlotPickers();
       this.pinnedWindows.clear();
       for (const w of newList) {
         this.pinnedWindows.add(w);
       }
       this.updateTiledLayout();
+    }
+
+    swapPinnedWindows(winA, winB) {
+      if (!this.isTiled || !winA || !winB || winA === winB) return;
+      const pinned = Array.from(this.pinnedWindows);
+      const idxA = pinned.indexOf(winA);
+      const idxB = pinned.indexOf(winB);
+      if (idxA === -1 || idxB === -1) return;
+      pinned[idxA] = winB;
+      pinned[idxB] = winA;
+      this.reorderPinnedWindows(pinned);
+    }
+
+    moveStreamToSlot(win, targetSlot) {
+      if (!this.isTiled || this.pinnedWindows.size < 2) return;
+      const pinned = Array.from(this.pinnedWindows);
+      const currentIdx = pinned.indexOf(win);
+      if (currentIdx === -1 || targetSlot < 0 || targetSlot >= pinned.length) return;
+      if (currentIdx === targetSlot) return;
+      const otherWin = pinned[targetSlot];
+      pinned[currentIdx] = otherWin;
+      pinned[targetSlot] = win;
+      this.reorderPinnedWindows(pinned);
     }
 
     handleSwapWindow(win) {
@@ -592,15 +781,7 @@
           this.reorderPinnedWindows(newOrder);
         }
       } else if (pinned.length >= 4) {
-        if (idx === 0) {
-          const [w0, w1, w2, w3] = pinned;
-          this.reorderPinnedWindows([w2, w0, w3, w1]);
-        } else {
-          const newOrder = [...pinned];
-          newOrder[0] = win;
-          newOrder[idx] = pinned[0];
-          this.reorderPinnedWindows(newOrder);
-        }
+        win.toggleSlotPicker();
       }
     }
 
@@ -618,6 +799,7 @@
       const pinned = Array.from(this.pinnedWindows);
 
       if (!this.isTiled || pinned.length < 2) {
+        this.closeAllSlotPickers();
         for (const win of pinned) {
           win.container.classList.remove("sp-tiled");
           win.container.style.height = "";
@@ -686,26 +868,21 @@
         }
 
         if (win.swapBtn) {
-          win.swapBtn.classList.remove("sp-swap-h", "sp-swap-v", "sp-swap-promote", "sp-swap-cycle");
+          win.swapBtn.classList.remove("sp-swap-h", "sp-swap-v", "sp-swap-promote", "sp-swap-cycle", "sp-swap-grid");
           if (count === 2) {
             win.swapBtn.classList.add("sp-swap-h");
-            win.swapBtn.title = "Swap Sides (S)";
+            win.swapBtn.title = "Swap Sides (S or Drag)";
           } else if (count === 3) {
             if (i === 0) {
               win.swapBtn.classList.add("sp-swap-v");
-              win.swapBtn.title = "Swap Side Streams (S)";
+              win.swapBtn.title = "Swap Side Streams (S or Drag)";
             } else {
               win.swapBtn.classList.add("sp-swap-promote");
-              win.swapBtn.title = "Promote to Main Stage (S)";
+              win.swapBtn.title = "Promote to Main Stage (S or Drag)";
             }
           } else {
-            if (i === 0) {
-              win.swapBtn.classList.add("sp-swap-cycle");
-              win.swapBtn.title = "Cycle Positions (S)";
-            } else {
-              win.swapBtn.classList.add("sp-swap-promote");
-              win.swapBtn.title = "Promote to Main Stage (S)";
-            }
+            win.swapBtn.classList.add("sp-swap-grid");
+            win.swapBtn.title = "Move to Slot (S, 1-4, or Drag)";
           }
         }
 
