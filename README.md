@@ -58,7 +58,7 @@ Access preset resolutions, volume defaults, hover trigger delays, and platform t
 ## Key Features
 
 - **Live Video Hover Previews**: Hover over any live stream card or sidebar channel on `twitch.tv` and `kick.com` to watch the stream in a floating video preview overlay.
-- **Per-Stream Volume Control**: Every preview window includes its own horizontal volume slider and sound toggle directly on the top header bar. Adjust volume from 0% to 100% per stream on the fly.
+- **Per-Stream Volume Control**: Every preview window includes its own horizontal volume slider and sound toggle directly on the top header bar with borderless controls. Adjust volume from 0% to 100% per stream on the fly.
 - **Continuous Playback Protection**: Guarded against host player DOM mutations and automated re-muting, ensuring clean uninterrupted sound playback.
 - **Pin Multiple Floating Overlays**: Click the pin icon or press `P` to detach any preview window into a floating overlay. Pin as many simultaneous streams as your hardware allows.
 - **Play Together (Full-Screen Viewport Tiling)**:
@@ -66,6 +66,11 @@ Access preset resolutions, volume defaults, hover trigger delays, and platform t
   - 3 Streams: Theater multi-view layout (main stage left, stacked secondary right).
   - 4 Streams: 2x2 four-way multi-view grid.
   - Press `T` again or `Esc` to restore floating positions and sizes instantly.
+- **Drag-and-Drop Tile Swapping**: Click and drag from any stream header in Dual+ mode to swap positions with another stream tile. Real-time visual drop targeting smoothly rearranges tiles without reloading iframes or interrupting playback.
+- **4-Way Move & Quadrant Popover**: In 4-stream Dual+ mode, use the electric-cyan 4-way move button (`✥`) or press `S` to open an instant quadrant picker (`TL`, `TR`, `BL`, `BR`).
+- **Direct Quadrant Hotkeys (`1`, `2`, `3`, `4`)**: Hover any stream in 4-stream Dual+ mode and press `1`, `2`, `3`, or `4` on your keyboard to immediately assign it into that corner.
+- **Seamless Zero-Gap Mode**: When colored borders are turned off in settings, outer margins and inter-stream gaps are completely eliminated (`gap = 0`), creating a flush edge-to-edge video wall.
+- **Configurable Colored Borders**: Choose between multi-color distinct borders per slot, single colors, or a custom color picker in the popup settings.
 - **Quick-Cycle Dimensions**: Switch between 360p, 480p, 640p, and 800p presets with a single header button click, or fine-tune width via the toolbar popup slider.
 - **Pointer-Capture Dragging**: Smooth, tear-free window dragging that will not get swallowed or trapped by cross-origin video iframes.
 - **Anti-Flicker Hover Delay**: Configurable debounce delay (default 300ms) prevents unwanted popups while scrolling rapidly through channels.
@@ -79,9 +84,11 @@ Access preset resolutions, volume defaults, hover trigger delays, and platform t
 | --- | --- | --- |
 | `M` | Toggle audio (unmute / mute) | Active hovered preview or pinned window |
 | `P` | Pin / Detach stream overlay | Active preview window |
-| `T` | Toggle Play Together grid tiling | Active when 2 to 4 streams are pinned |
-| `Esc` | Close active preview overlay / Exit tile mode | Active preview window or viewport |
-| **Drag Header** | Reposition floating window anywhere | Any pinned preview window |
+| `T` | Toggle Play Together / Dual+ grid tiling | Active when 2 to 4 streams are pinned |
+| `S` | Swap positions / Promote to main stage / Open quadrant picker | Active stream tile in Dual+ mode |
+| `1` - `4` | Move stream directly to quadrant (TL, TR, BL, BR) | Hovered stream tile in 4-stream Dual+ mode |
+| `Esc` | Close active preview overlay / Exit tile mode / Close popover | Active preview window or viewport |
+| **Drag Header** | Reposition floating window or drag-to-swap in Dual+ | Any pinned preview window |
 
 ---
 
@@ -109,6 +116,12 @@ twitch-kick-previews/
 ---
 
 ## Installation
+
+### Direct XPI Installation
+1. Download `release/twitch-kick-previews.xpi` from this repository.
+2. Open Firefox and go to `about:addons`.
+3. Click the gear icon in the top-right corner and select **"Install Add-on From File..."**.
+4. Select the downloaded `twitch-kick-previews.xpi`.
 
 ### From Firefox Add-ons (AMO)
 Install the signed add-on directly from [addons.mozilla.org](https://addons.mozilla.org) once published.

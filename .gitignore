@@ -4,6 +4,7 @@ test/
 # Package archives and build artifacts
 *.zip
 *.xpi
+!release/twitch-kick-previews.xpi
 web-ext-artifacts/
 
 # System & editor files
