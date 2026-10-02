@@ -1,10 +1,12 @@
-<img src="images/stream-previews-amo-icon-512.png" width="80" height="80" align="right" alt="Stream Previews Logo">
-
 # Stream Previews (Twitch & Kick)
 
 **Fast, lightweight live video hover previews, individual volume sliders, multi-stream pinned overlays, and Play Together grid tiling for Firefox.**
 
-<br clear="right">
+[![Firefox Add-on](https://img.shields.io/badge/Firefox-WebExtension%20MV3-FF7139?logo=firefox-browser&logoColor=white)](https://addons.mozilla.org)
+[![Version](https://img.shields.io/badge/version-v0.5.4-38BDF8)](https://github.com/PlasmaDrifter/twitch-kick-previews/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-22C55E)](LICENSE)
+[![Twitch](https://img.shields.io/badge/Twitch-Supported-9146FF?logo=twitch&logoColor=white)](https://twitch.tv)
+[![Kick](https://img.shields.io/badge/Kick-Supported-22C55E)](https://kick.com)
 
 ---
 

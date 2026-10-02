@@ -2,6 +2,12 @@
 
 A lightweight, bloat-free Firefox WebExtension for live video hover previews on Twitch and Kick.
 
+[![Firefox Add-on](https://img.shields.io/badge/Firefox-WebExtension%20MV3-FF7139?logo=firefox-browser&logoColor=white)](https://addons.mozilla.org)
+[![Version](https://img.shields.io/badge/version-v0.5.4-38BDF8)](https://github.com/PlasmaDrifter/twitch-kick-previews/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-22C55E)](LICENSE)
+[![Twitch](https://img.shields.io/badge/Twitch-Supported-9146FF?logo=twitch&logoColor=white)](https://twitch.tv)
+[![Kick](https://img.shields.io/badge/Kick-Supported-22C55E)](https://kick.com)
+
 ## Features
 - **Live Video Previews**: Hover over stream cards or sidebar channels on Twitch and Kick to preview streams in real time.
 - **Audio Controls**: Muted by default with an instant audio unmute/mute button on the preview header and keyboard shortcut (`M`).
