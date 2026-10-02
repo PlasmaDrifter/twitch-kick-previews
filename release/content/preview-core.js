@@ -70,10 +70,12 @@
                 <path d="M21 12a9 9 0 1 1-2.64-6.36L21 8M21 3v5h-5"/>
               </svg>
               <svg class="sp-icon-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
-                <rect x="14" y="14" width="7" height="7" rx="1"/>
+                <polyline points="5 9 2 12 5 15"/>
+                <polyline points="9 5 12 2 15 5"/>
+                <polyline points="15 19 12 22 9 19"/>
+                <polyline points="19 9 22 12 19 15"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <line x1="12" y1="2" x2="12" y2="22"/>
               </svg>
             </button>
             <div class="sp-volume-group">
@@ -383,11 +385,17 @@
         btn.classList.toggle("sp-slot-current", slotIdx === currentSlot);
       });
       this.slotPicker.classList.add("sp-visible");
+      if (this.swapBtn) {
+        this.swapBtn.classList.add("sp-swap-active");
+      }
     }
 
     closeSlotPicker() {
       if (this.slotPicker) {
         this.slotPicker.classList.remove("sp-visible");
+      }
+      if (this.swapBtn) {
+        this.swapBtn.classList.remove("sp-swap-active");
       }
     }
 
@@ -801,7 +809,7 @@
       if (!this.isTiled || pinned.length < 2) {
         this.closeAllSlotPickers();
         for (const win of pinned) {
-          win.container.classList.remove("sp-tiled");
+          win.container.classList.remove("sp-tiled", "sp-no-gap");
           win.container.style.height = "";
           win.container.style.boxShadow = "";
           if (win.savedFloatingRect) {
@@ -819,16 +827,21 @@
       const count = Math.min(4, pinned.length);
       const W = window.innerWidth;
       const H = window.innerHeight;
-      const gap = 4;
 
       const DISTINCT_COLORS = ["#9146ff", "#22c55e", "#00e5ff", "#ff7538"];
       const borderEnabled = this.config.tiledBorderEnabled !== false;
       const borderMode = this.config.tiledBorderMode || "distinct";
       const customColor = this.config.tiledBorderCustomColor || "#9146ff";
 
-      const halfW = Math.floor((W - (gap * 3)) / 2);
-      const fullH = Math.floor(H - (gap * 2));
-      const halfH = Math.floor((H - (gap * 3)) / 2);
+      const gap = borderEnabled ? 4 : 0;
+      const halfW = borderEnabled ? Math.floor((W - (gap * 3)) / 2) : Math.floor(W / 2);
+      const fullH = borderEnabled ? Math.floor(H - (gap * 2)) : H;
+      const halfH = borderEnabled ? Math.floor((H - (gap * 3)) / 2) : Math.floor(H / 2);
+
+      const wCol0 = halfW;
+      const wCol1 = borderEnabled ? halfW : (W - halfW);
+      const hRow0 = halfH;
+      const hRow1 = borderEnabled ? halfH : (H - halfH);
 
       for (let i = 0; i < pinned.length; i++) {
         const win = pinned[i];
@@ -843,6 +856,7 @@
         }
 
         win.container.classList.add("sp-tiled");
+        win.container.classList.toggle("sp-no-gap", !borderEnabled);
 
         let borderColor = "";
         if (borderEnabled) {
@@ -864,7 +878,7 @@
         if (borderColor) {
           win.container.style.boxShadow = `0 0 0 2px ${borderColor}, 0 8px 30px rgba(0, 0, 0, 0.9)`;
         } else {
-          win.container.style.boxShadow = "";
+          win.container.style.boxShadow = "none";
         }
 
         if (win.swapBtn) {
@@ -889,34 +903,39 @@
         let left = 0, top = 0, w = halfW, h = halfH;
 
         if (count === 2) {
-          w = halfW;
-          h = fullH;
           top = gap;
-          left = i === 0 ? gap : gap + halfW + gap;
+          h = fullH;
+          if (i === 0) {
+            left = gap;
+            w = wCol0;
+          } else {
+            left = borderEnabled ? (gap + halfW + gap) : wCol0;
+            w = wCol1;
+          }
         } else if (count === 3) {
           if (i === 0) {
             left = gap;
             top = gap;
-            w = halfW;
+            w = wCol0;
             h = fullH;
           } else if (i === 1) {
-            left = gap + halfW + gap;
+            left = borderEnabled ? (gap + halfW + gap) : wCol0;
             top = gap;
-            w = halfW;
-            h = halfH;
+            w = wCol1;
+            h = hRow0;
           } else {
-            left = gap + halfW + gap;
-            top = gap + halfH + gap;
-            w = halfW;
-            h = halfH;
+            left = borderEnabled ? (gap + halfW + gap) : wCol0;
+            top = borderEnabled ? (gap + halfH + gap) : hRow0;
+            w = wCol1;
+            h = hRow1;
           }
         } else {
           const col = i % 2;
           const row = Math.floor(i / 2);
-          left = col === 0 ? gap : gap + halfW + gap;
-          top = row === 0 ? gap : gap + halfH + gap;
-          w = halfW;
-          h = halfH;
+          left = col === 0 ? gap : (borderEnabled ? (gap + halfW + gap) : wCol0);
+          top = row === 0 ? gap : (borderEnabled ? (gap + halfH + gap) : hRow0);
+          w = col === 0 ? wCol0 : wCol1;
+          h = row === 0 ? hRow0 : hRow1;
         }
 
         win.container.style.left = `${left}px`;
