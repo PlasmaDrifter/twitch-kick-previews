@@ -1,12 +1,10 @@
-<div align="center">
-
-<img src="images/stream-previews-amo-icon-512.png" width="128" height="128" alt="Stream Previews Logo">
+<img src="images/stream-previews-amo-icon-512.png" width="80" height="80" align="right" alt="Stream Previews Logo">
 
 # Stream Previews (Twitch & Kick)
 
 **Fast, lightweight live video hover previews, individual volume sliders, multi-stream pinned overlays, and Play Together grid tiling for Firefox.**
 
-</div>
+<br clear="right">
 
 ---
 
