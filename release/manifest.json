@@ -81,6 +81,7 @@
         "content/player-frame.js"
       ],
       "all_frames": true,
+      "match_origin_as_fallback": true,
       "run_at": "document_start"
     }
   ],

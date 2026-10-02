@@ -112,7 +112,7 @@
           <div class="sp-loader">
             <div class="sp-spinner"></div>
           </div>
-          <iframe class="sp-iframe" allow="autoplay; fullscreen" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+          <iframe class="sp-iframe" allowfullscreen allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *"></iframe>
         </div>
       `;
 
@@ -246,6 +246,8 @@
       this.iframe.addEventListener("load", () => {
         this.loader.classList.add("sp-loaded");
         this.sendAudioMessage();
+        setTimeout(() => this.sendAudioMessage(), 400);
+        setTimeout(() => this.sendAudioMessage(), 1200);
       });
     }
 
@@ -476,11 +478,31 @@
     sendAudioMessage() {
       if (this.iframe && this.iframe.contentWindow) {
         try {
+          // Extension internal message for player-frame.js (controls direct video element & Kick)
           this.iframe.contentWindow.postMessage({
             type: "PREVIEW_AUDIO_TOGGLE",
             muted: this.isMuted,
             volume: this.currentVolume
           }, "*");
+
+          // Native Twitch Embed Player Proxy protocol (controls Twitch internal player state)
+          this.iframe.contentWindow.postMessage({
+            eventName: 10, // SetMuted
+            params: this.isMuted,
+            namespace: "twitch-embed-player-proxy"
+          }, "*");
+          this.iframe.contentWindow.postMessage({
+            eventName: 11, // SetVolume
+            params: this.currentVolume,
+            namespace: "twitch-embed-player-proxy"
+          }, "*");
+          if (!this.isMuted) {
+            this.iframe.contentWindow.postMessage({
+              eventName: 3, // Play
+              params: null,
+              namespace: "twitch-embed-player-proxy"
+            }, "*");
+          }
         } catch (_) {}
       }
     }
@@ -516,7 +538,11 @@
 
     buildPlayerUrl(platform, channel) {
       if (platform === "twitch") {
-        return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=twitch.tv&muted=${this.isMuted}&volume=${this.currentVolume}&controls=false`;
+        const host = window.location.hostname || "twitch.tv";
+        const parentParam = host !== "twitch.tv"
+          ? `parent=${encodeURIComponent(host)}&parent=twitch.tv`
+          : "parent=twitch.tv";
+        return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&${parentParam}&muted=${this.isMuted}&volume=${this.currentVolume}&controls=false`;
       } else if (platform === "kick") {
         return `https://player.kick.com/${encodeURIComponent(channel)}?autoplay=true&muted=${this.isMuted}&volume=${this.currentVolume}`;
       }
@@ -617,6 +643,22 @@
       window.addEventListener("resize", () => {
         if (this.isTiled) {
           this.updateTiledLayout();
+        }
+      });
+
+      window.addEventListener("message", (e) => {
+        const data = e.data;
+        if (!data || typeof data !== "object") return;
+        if (data.type === "PREVIEW_FRAME_READY") {
+          const wins = [];
+          if (this.hoverWindow) wins.push(this.hoverWindow);
+          for (const w of this.pinnedWindows) wins.push(w);
+          for (const win of wins) {
+            if (win.iframe && win.iframe.contentWindow === e.source) {
+              win.sendAudioMessage();
+              break;
+            }
+          }
         }
       });
 

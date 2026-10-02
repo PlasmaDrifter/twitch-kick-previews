@@ -11,6 +11,7 @@
   }
 
   let videoElement = null;
+  let isApplyingAudio = false;
 
   function dismissContentGate() {
     const gateButton = document.querySelector(".content-overlay-gate__allow-pointers button");
@@ -33,6 +34,18 @@
       }
     }
 
+    // Kick player mute/unmute button in player controls (if rendered)
+    const kickMuteBtn = document.querySelector('button[aria-label*="mute" i], button[title*="mute" i]');
+    if (kickMuteBtn) {
+      const label = (kickMuteBtn.getAttribute("aria-label") || kickMuteBtn.getAttribute("title") || "").toLowerCase();
+      const isCurrentlyMuted = label.includes("unmute");
+      if (!muted && isCurrentlyMuted) {
+        try { kickMuteBtn.click(); } catch (_) {}
+      } else if (muted && !isCurrentlyMuted) {
+        try { kickMuteBtn.click(); } catch (_) {}
+      }
+    }
+
     // Keep Twitch localStorage in sync
     if (window.location.hostname.includes("twitch.tv")) {
       try {
@@ -45,13 +58,17 @@
   function applyAudioState(video) {
     if (!video) return;
 
-    video.muted = currentMuted;
-    if (!currentMuted) {
+    isApplyingAudio = true;
+    try {
+      video.muted = currentMuted;
       video.volume = currentVolume;
-      if (video.paused) {
-        video.play().catch(() => {});
+      if (!currentMuted) {
+        if (video.paused) {
+          video.play().catch(() => {});
+        }
       }
-    }
+    } catch (_) {}
+    setTimeout(() => { isApplyingAudio = false; }, 60);
 
     dismissContentGate();
     syncNativePlayerControls(currentMuted);
@@ -63,19 +80,29 @@
 
     // Guard against host page / React store resetting video.muted to true
     video.addEventListener("volumechange", () => {
+      if (isApplyingAudio) return;
       if (!currentMuted && video.muted) {
-        // Re-assert unmuted state if the host site tries to force mute
-        video.muted = false;
-        video.volume = currentVolume;
+        applyAudioState(video);
       }
     });
 
     // Guard against pause on unmute caused by browser autoplay policies
     video.addEventListener("pause", () => {
+      if (isApplyingAudio) return;
       if (!currentMuted && video.paused) {
         video.play().catch(() => {});
       }
     });
+  }
+
+  function notifyParentReady() {
+    try {
+      window.parent.postMessage({
+        type: "PREVIEW_FRAME_READY",
+        muted: currentMuted,
+        volume: currentVolume
+      }, "*");
+    } catch (_) {}
   }
 
   // Observe DOM for the video element once without repeatedly resetting on every subtree change
@@ -85,7 +112,9 @@
       videoElement = video;
       attachVideoListeners(video);
       applyAudioState(video);
+      notifyParentReady();
     }
+    dismissContentGate();
   });
 
   observer.observe(document.documentElement, {
@@ -99,6 +128,7 @@
     videoElement = existingVideo;
     attachVideoListeners(existingVideo);
     applyAudioState(existingVideo);
+    notifyParentReady();
   }
 
   // Listen for audio control messages from preview-core parent window
