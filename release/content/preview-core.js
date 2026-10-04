@@ -10,10 +10,21 @@
     { label: "XL", width: 800 }
   ];
 
+  const NON_CHANNEL_PATHS = new Set([
+    "directory", "videos", "p", "downloads", "search", "settings",
+    "subscriptions", "inventory", "drops", "messages", "friends",
+    "turbo", "prime", "wallet", "login", "signup", "team", "popout",
+    "jobs", "legal", "categories", "following", "browse", "video",
+    "terms-of-service", "privacy-policy", "community-guidelines",
+    "dmca", "support", "about", "press", "careers", "help", "dashboard",
+    "home"
+  ]);
+
   class PreviewWindow {
     constructor(core, isPinnedMode = false) {
       this.core = core;
       this.isPinned = isPinnedMode;
+      this.isAutoMainStream = false;
       this.channel = null;
       this.platform = null;
       this.isMuted = true;
@@ -601,6 +612,7 @@
       this.activeWindow = null;
       this.isTiled = false;
       this.topZIndex = 2147483640;
+      this.savedHostVideoState = null;
 
       this.enterTimer = null;
       this.leaveTimer = null;
@@ -691,7 +703,7 @@
         } else if (e.key === "p" || e.key === "P") {
           if (activeWin) activeWin.handlePinClick();
         } else if (e.key === "t" || e.key === "T") {
-          if (this.pinnedWindows.size >= 2) {
+          if (this.pinnedWindows.size >= 2 || this.canTileWithPageStream() || this.isTiled) {
             this.togglePlayTogether();
           }
         } else if (e.key === "s" || e.key === "S") {
@@ -715,6 +727,16 @@
           }
         }
       });
+
+      let lastNavUrl = window.location.href;
+      const checkUrlChange = () => {
+        if (window.location.href !== lastNavUrl) {
+          lastNavUrl = window.location.href;
+          this.updatePlayTogetherButtons();
+        }
+      };
+      window.addEventListener("popstate", checkUrlChange);
+      setInterval(checkUrlChange, 1000);
     }
 
     bringToFront(win) {
@@ -752,14 +774,33 @@
     }
 
     removePinnedWindow(previewWin) {
+      const wasAuto = previewWin.isAutoMainStream;
       this.pinnedWindows.delete(previewWin);
       if (this.activeWindow === previewWin) {
         this.activeWindow = null;
       }
       previewWin.destroy();
 
-      if (this.pinnedWindows.size < 2 && this.isTiled) {
-        this.isTiled = false;
+      if (wasAuto) {
+        this.resumeHostStream();
+      }
+
+      if (this.isTiled) {
+        let remainingAuto = null;
+        for (const win of this.pinnedWindows) {
+          if (win.isAutoMainStream) {
+            remainingAuto = win;
+            break;
+          }
+        }
+        if (this.pinnedWindows.size < 2 || (this.pinnedWindows.size === 1 && remainingAuto)) {
+          if (remainingAuto) {
+            this.pinnedWindows.delete(remainingAuto);
+            remainingAuto.destroy();
+            this.resumeHostStream();
+          }
+          this.isTiled = false;
+        }
       }
 
       this.updateTiledLayout();
@@ -767,7 +808,52 @@
     }
 
     togglePlayTogether() {
-      if (this.pinnedWindows.size < 2) return;
+      // If entering Dual+ with 1 pinned stream on an active channel page
+      if (!this.isTiled && this.canTileWithPageStream()) {
+        const pageStream = this.getPageStreamInfo();
+        const existingWin = Array.from(this.pinnedWindows)[0];
+        this.pauseHostStream();
+
+        const mainWin = new PreviewWindow(this, true);
+        mainWin.isAutoMainStream = true;
+        if (this.savedHostVideoState) {
+          mainWin.isMuted = this.savedHostVideoState.muted;
+          mainWin.currentVolume = this.savedHostVideoState.volume;
+        }
+        mainWin.show(pageStream.platform, pageStream.channel, 0, 0);
+
+        // Put main stream in slot 0 (left), pinned window in slot 1 (right)
+        const reordered = [mainWin, existingWin];
+        this.pinnedWindows.clear();
+        for (const w of reordered) this.pinnedWindows.add(w);
+
+        this.isTiled = true;
+        this.updateTiledLayout();
+        this.updatePlayTogetherButtons();
+        return;
+      }
+
+      if (!this.isTiled && this.pinnedWindows.size < 2) return;
+
+      if (this.isTiled) {
+        let autoWin = null;
+        for (const win of this.pinnedWindows) {
+          if (win.isAutoMainStream) {
+            autoWin = win;
+            break;
+          }
+        }
+        if (autoWin) {
+          this.pinnedWindows.delete(autoWin);
+          autoWin.destroy();
+          this.resumeHostStream();
+        }
+        this.isTiled = false;
+        this.updateTiledLayout();
+        this.updatePlayTogetherButtons();
+        return;
+      }
+
       this.isTiled = !this.isTiled;
       this.updateTiledLayout();
       this.updatePlayTogetherButtons();
@@ -835,13 +921,85 @@
       }
     }
 
+    getPageStreamInfo() {
+      const host = window.location.hostname;
+      let platform = null;
+      if (host.includes("twitch.tv")) {
+        platform = "twitch";
+      } else if (host.includes("kick.com")) {
+        platform = "kick";
+      }
+      if (!platform) return null;
+
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      if (parts.length !== 1) return null;
+
+      const channel = parts[0].toLowerCase();
+      if (NON_CHANNEL_PATHS.has(channel)) return null;
+
+      if (platform === "twitch" && !/^[a-zA-Z0-9_]{3,25}$/.test(channel)) return null;
+      if (platform === "kick" && !/^[a-zA-Z0-9_\-\.]{3,30}$/.test(channel)) return null;
+
+      return { platform, channel };
+    }
+
+    canTileWithPageStream() {
+      if (this.isTiled || this.pinnedWindows.size !== 1) return false;
+      const pageStream = this.getPageStreamInfo();
+      if (!pageStream) return false;
+      const onlyPinned = Array.from(this.pinnedWindows)[0];
+      return onlyPinned && onlyPinned.channel && onlyPinned.channel.toLowerCase() !== pageStream.channel.toLowerCase();
+    }
+
+    getHostVideoElement() {
+      return document.querySelector(
+        ".video-player__container video, [data-a-target='video-player'] video, .channel-root video, #channel-player video, video"
+      );
+    }
+
+    pauseHostStream() {
+      const video = this.getHostVideoElement();
+      if (!video) return;
+      this.savedHostVideoState = {
+        paused: video.paused,
+        muted: video.muted,
+        volume: video.volume
+      };
+      if (!video.paused) {
+        try { video.pause(); } catch (_) {}
+      }
+      video.muted = true;
+    }
+
+    resumeHostStream() {
+      if (!this.savedHostVideoState) return;
+      const video = this.getHostVideoElement();
+      if (video) {
+        video.muted = this.savedHostVideoState.muted;
+        video.volume = this.savedHostVideoState.volume;
+        if (!this.savedHostVideoState.paused) {
+          try { video.play().catch(() => {}); } catch (_) {}
+        }
+      }
+      this.savedHostVideoState = null;
+    }
+
     updatePlayTogetherButtons() {
-      const showBtn = this.pinnedWindows.size >= 2;
+      const canDualWithPage = this.canTileWithPageStream();
+      const showBtn = this.pinnedWindows.size >= 2 || canDualWithPage;
+      const pageStream = this.getPageStreamInfo();
+
       for (const win of this.pinnedWindows) {
         if (!win.togetherBtn) continue;
         win.togetherBtn.classList.toggle("sp-visible-btn", showBtn);
         win.togetherBtn.classList.toggle("sp-together-active", this.isTiled);
-        win.togetherBtn.title = this.isTiled ? "Restore Floating Windows (T)" : "Play Together (Fill Screen) (T)";
+        if (this.isTiled) {
+          win.togetherBtn.title = "Restore Floating Windows (T)";
+        } else if (canDualWithPage && pageStream) {
+          win.togetherBtn.title = `Dual+ with Main Stream (${pageStream.channel}) (T)`;
+        } else {
+          win.togetherBtn.title = "Play Together (Fill Screen) (T)";
+        }
       }
     }
 
