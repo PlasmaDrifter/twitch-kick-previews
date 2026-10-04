@@ -25,6 +25,7 @@
       this.core = core;
       this.isPinned = isPinnedMode;
       this.isAutoMainStream = false;
+      this.hasUserAdjustedAudio = false;
       this.channel = null;
       this.platform = null;
       this.isMuted = true;
@@ -179,6 +180,7 @@
 
       this.volumeSlider.addEventListener("input", (e) => {
         e.stopPropagation();
+        this.hasUserAdjustedAudio = true;
         const val = parseInt(e.target.value, 10);
         if (val === 0) {
           this.isMuted = true;
@@ -519,6 +521,7 @@
     }
 
     toggleAudio() {
+      this.hasUserAdjustedAudio = true;
       if (this.isMuted) {
         this.isMuted = false;
         if (!this.currentVolume || this.currentVolume <= 0) {
@@ -560,11 +563,22 @@
       return "about:blank";
     }
 
-    show(platform, channel, x, y) {
+    show(platform, channel, x, y, initialMuted = undefined, initialVolume = undefined) {
       this.channel = channel;
       this.platform = platform;
-      this.isMuted = this.core.config.defaultMuted;
-      this.currentVolume = this.core.config.defaultVolume;
+      if (initialMuted !== undefined) {
+        this.isMuted = initialMuted;
+        this.hasUserAdjustedAudio = true;
+      } else if (!this.hasUserAdjustedAudio) {
+        this.isMuted = this.core.config.defaultMuted;
+      }
+
+      if (initialVolume !== undefined) {
+        this.currentVolume = initialVolume;
+        this.hasUserAdjustedAudio = true;
+      } else if (!this.hasUserAdjustedAudio) {
+        this.currentVolume = this.core.config.defaultVolume;
+      }
 
       this.updateAudioButtonUI();
       this.updatePinButtonUI();
@@ -775,6 +789,7 @@
 
     removePinnedWindow(previewWin) {
       const wasAuto = previewWin.isAutoMainStream;
+      const previewAudio = wasAuto ? { muted: previewWin.isMuted, volume: previewWin.currentVolume } : null;
       this.pinnedWindows.delete(previewWin);
       if (this.activeWindow === previewWin) {
         this.activeWindow = null;
@@ -782,7 +797,7 @@
       previewWin.destroy();
 
       if (wasAuto) {
-        this.resumeHostStream();
+        this.resumeHostStream(previewAudio);
       }
 
       if (this.isTiled) {
@@ -795,9 +810,13 @@
         }
         if (this.pinnedWindows.size < 2 || (this.pinnedWindows.size === 1 && remainingAuto)) {
           if (remainingAuto) {
+            const autoAudio = {
+              muted: remainingAuto.isMuted,
+              volume: remainingAuto.currentVolume
+            };
             this.pinnedWindows.delete(remainingAuto);
             remainingAuto.destroy();
-            this.resumeHostStream();
+            this.resumeHostStream(autoAudio);
           }
           this.isTiled = false;
         }
@@ -816,11 +835,9 @@
 
         const mainWin = new PreviewWindow(this, true);
         mainWin.isAutoMainStream = true;
-        if (this.savedHostVideoState) {
-          mainWin.isMuted = this.savedHostVideoState.muted;
-          mainWin.currentVolume = this.savedHostVideoState.volume;
-        }
-        mainWin.show(pageStream.platform, pageStream.channel, 0, 0);
+        const initMuted = this.savedHostVideoState ? this.savedHostVideoState.muted : false;
+        const initVolume = this.savedHostVideoState ? this.savedHostVideoState.volume : (this.config.defaultVolume || 0.8);
+        mainWin.show(pageStream.platform, pageStream.channel, 0, 0, initMuted, initVolume);
 
         // Put main stream in slot 0 (left), pinned window in slot 1 (right)
         const reordered = [mainWin, existingWin];
@@ -830,6 +847,11 @@
         this.isTiled = true;
         this.updateTiledLayout();
         this.updatePlayTogetherButtons();
+
+        mainWin.sendAudioMessage();
+        if (existingWin) {
+          existingWin.sendAudioMessage();
+        }
         return;
       }
 
@@ -844,9 +866,13 @@
           }
         }
         if (autoWin) {
+          const autoAudio = {
+            muted: autoWin.isMuted,
+            volume: autoWin.currentVolume
+          };
           this.pinnedWindows.delete(autoWin);
           autoWin.destroy();
-          this.resumeHostStream();
+          this.resumeHostStream(autoAudio);
         }
         this.isTiled = false;
         this.updateTiledLayout();
@@ -957,30 +983,115 @@
       );
     }
 
-    pauseHostStream() {
-      const video = this.getHostVideoElement();
-      if (!video) return;
-      this.savedHostVideoState = {
-        paused: video.paused,
-        muted: video.muted,
-        volume: video.volume
-      };
-      if (!video.paused) {
-        try { video.pause(); } catch (_) {}
-      }
-      video.muted = true;
-    }
+    getHostAudioState() {
+      let isMuted = true;
+      let volume = 0.8;
 
-    resumeHostStream() {
-      if (!this.savedHostVideoState) return;
       const video = this.getHostVideoElement();
       if (video) {
-        video.muted = this.savedHostVideoState.muted;
-        video.volume = this.savedHostVideoState.volume;
-        if (!this.savedHostVideoState.paused) {
+        isMuted = video.muted;
+        volume = (typeof video.volume === "number" && !isNaN(video.volume)) ? video.volume : 0.8;
+      }
+
+      // Check Twitch localStorage fallback
+      try {
+        const storedMuted = localStorage.getItem("video-muted");
+        if (storedMuted !== null) {
+          try {
+            const parsed = JSON.parse(storedMuted);
+            if (typeof parsed === "boolean") isMuted = parsed;
+            else if (parsed && typeof parsed.default === "boolean") isMuted = parsed.default;
+          } catch (_) {
+            if (storedMuted === "true") isMuted = true;
+            if (storedMuted === "false") isMuted = false;
+          }
+        }
+        const storedVol = localStorage.getItem("volume");
+        if (storedVol !== null) {
+          try {
+            const parsed = JSON.parse(storedVol);
+            if (typeof parsed === "number") volume = parsed;
+            else if (parsed && typeof parsed.default === "number") volume = parsed.default;
+          } catch (_) {
+            const num = parseFloat(storedVol);
+            if (!isNaN(num)) volume = num;
+          }
+        }
+      } catch (_) {}
+
+      // If the DOM video element is explicitly unmuted, trust video.muted
+      if (video && video.muted === false) {
+        isMuted = false;
+        if (typeof video.volume === "number" && !isNaN(video.volume)) {
+          volume = video.volume;
+        }
+      }
+
+      // Check native mute button aria-label as additional check on Twitch
+      const muteBtn = document.querySelector('button[data-a-target="player-mute-unmute-button"]');
+      if (muteBtn) {
+        const label = (muteBtn.getAttribute("aria-label") || muteBtn.innerText || "").toLowerCase();
+        if (label.includes("mute") && !label.includes("unmute")) {
+          isMuted = false;
+        } else if (label.includes("unmute")) {
+          isMuted = true;
+        }
+      }
+
+      if (volume <= 0) {
+        isMuted = true;
+      }
+
+      return { muted: isMuted, volume: Math.max(0, Math.min(1, volume)) };
+    }
+
+    pauseHostStream() {
+      const video = this.getHostVideoElement();
+      const audioState = this.getHostAudioState();
+      this.savedHostVideoState = {
+        paused: video ? video.paused : false,
+        muted: audioState.muted,
+        volume: audioState.volume
+      };
+      if (video) {
+        if (!video.paused) {
+          try { video.pause(); } catch (_) {}
+        }
+        video.muted = true;
+      }
+    }
+
+    resumeHostStream(updatedAudioState = null) {
+      if (!this.savedHostVideoState && !updatedAudioState) return;
+      const targetMuted = updatedAudioState ? updatedAudioState.muted : (this.savedHostVideoState ? this.savedHostVideoState.muted : false);
+      const targetVolume = updatedAudioState ? updatedAudioState.volume : (this.savedHostVideoState ? this.savedHostVideoState.volume : 0.8);
+      const wasPaused = this.savedHostVideoState ? this.savedHostVideoState.paused : false;
+
+      const video = this.getHostVideoElement();
+      if (video) {
+        video.muted = targetMuted;
+        video.volume = targetVolume;
+        if (!wasPaused) {
           try { video.play().catch(() => {}); } catch (_) {}
         }
       }
+
+      // Sync Twitch native controls and localStorage
+      try {
+        localStorage.setItem("video-muted", JSON.stringify({ default: targetMuted }));
+        localStorage.setItem("volume", JSON.stringify({ default: targetVolume }));
+      } catch (_) {}
+
+      const muteBtn = document.querySelector('button[data-a-target="player-mute-unmute-button"]');
+      if (muteBtn) {
+        const label = (muteBtn.getAttribute("aria-label") || muteBtn.innerText || "").toLowerCase();
+        if (!targetMuted && label.includes("unmute")) {
+          try { muteBtn.click(); } catch (_) {}
+        } else if (targetMuted && label.includes("mute") && !label.includes("unmute")) {
+          try { muteBtn.click(); } catch (_) {}
+        }
+      }
+
       this.savedHostVideoState = null;
     }
 
