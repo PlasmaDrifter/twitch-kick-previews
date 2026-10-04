@@ -11,108 +11,44 @@
   }
 
   let videoElement = null;
-  let isApplyingAudio = false;
+  let gateDismissed = false;
 
   function dismissContentGate() {
+    if (gateDismissed) return;
     const gateButton = document.querySelector(".content-overlay-gate__allow-pointers button");
     if (gateButton) {
+      gateDismissed = true;
       try { gateButton.click(); } catch (_) {}
-    }
-  }
-
-  function syncNativePlayerControls(muted) {
-    // Twitch player mute/unmute button in player controls
-    const twitchMuteBtn = document.querySelector('button[data-a-target="player-mute-unmute-button"]');
-    if (twitchMuteBtn) {
-      const label = (twitchMuteBtn.getAttribute("aria-label") || "").toLowerCase();
-      const isCurrentlyTwitchMuted = label.includes("unmute");
-      // If Twitch player state doesn't match our desired state, click it to update React store
-      if (!muted && isCurrentlyTwitchMuted) {
-        try { twitchMuteBtn.click(); } catch (_) {}
-      } else if (muted && !isCurrentlyTwitchMuted && label.includes("mute")) {
-        try { twitchMuteBtn.click(); } catch (_) {}
-      }
-    }
-
-    // Kick player mute/unmute button in player controls (if rendered)
-    const kickMuteBtn = document.querySelector('button[aria-label*="mute" i], button[title*="mute" i]');
-    if (kickMuteBtn) {
-      const label = (kickMuteBtn.getAttribute("aria-label") || kickMuteBtn.getAttribute("title") || "").toLowerCase();
-      const isCurrentlyMuted = label.includes("unmute");
-      if (!muted && isCurrentlyMuted) {
-        try { kickMuteBtn.click(); } catch (_) {}
-      } else if (muted && !isCurrentlyMuted) {
-        try { kickMuteBtn.click(); } catch (_) {}
-      }
-    }
-
-    // Keep Twitch localStorage in sync
-    if (window.location.hostname.includes("twitch.tv")) {
-      try {
-        localStorage.setItem("video-muted", JSON.stringify({ default: !!muted }));
-        localStorage.setItem("volume", String(currentVolume));
-      } catch (_) {}
     }
   }
 
   function applyAudioState(video) {
     if (!video) return;
 
-    isApplyingAudio = true;
     try {
       video.muted = currentMuted;
       video.volume = currentVolume;
-      if (!currentMuted) {
-        if (video.paused) {
-          video.play().catch(() => {});
-        }
-      }
-    } catch (_) {}
-    setTimeout(() => { isApplyingAudio = false; }, 60);
-
-    dismissContentGate();
-    syncNativePlayerControls(currentMuted);
-  }
-
-  function attachVideoListeners(video) {
-    if (!video || video._spAttached) return;
-    video._spAttached = true;
-
-    // Guard against host page / React store resetting video.muted to true
-    video.addEventListener("volumechange", () => {
-      if (isApplyingAudio) return;
-      if (!currentMuted && video.muted) {
-        applyAudioState(video);
-      }
-    });
-
-    // Guard against pause on unmute caused by browser autoplay policies
-    video.addEventListener("pause", () => {
-      if (isApplyingAudio) return;
       if (!currentMuted && video.paused) {
         video.play().catch(() => {});
       }
-    });
-  }
-
-  function notifyParentReady() {
-    try {
-      window.parent.postMessage({
-        type: "PREVIEW_FRAME_READY",
-        muted: currentMuted,
-        volume: currentVolume
-      }, "*");
     } catch (_) {}
+
+    dismissContentGate();
   }
 
-  // Observe DOM for the video element once without repeatedly resetting on every subtree change
+  // Observe DOM for the video element once
   const observer = new MutationObserver(() => {
     const video = document.querySelector("video");
     if (video && video !== videoElement) {
       videoElement = video;
-      attachVideoListeners(video);
       applyAudioState(video);
-      notifyParentReady();
+      try {
+        window.parent.postMessage({
+          type: "PREVIEW_FRAME_READY",
+          muted: currentMuted,
+          volume: currentVolume
+        }, "*");
+      } catch (_) {}
     }
     dismissContentGate();
   });
@@ -126,9 +62,14 @@
   const existingVideo = document.querySelector("video");
   if (existingVideo) {
     videoElement = existingVideo;
-    attachVideoListeners(existingVideo);
     applyAudioState(existingVideo);
-    notifyParentReady();
+    try {
+      window.parent.postMessage({
+        type: "PREVIEW_FRAME_READY",
+        muted: currentMuted,
+        volume: currentVolume
+      }, "*");
+    } catch (_) {}
   }
 
   // Listen for audio control messages from preview-core parent window
@@ -146,15 +87,6 @@
       if (video) {
         applyAudioState(video);
       }
-
-      // Notify parent of updated audio state
-      try {
-        window.parent.postMessage({
-          type: "PREVIEW_AUDIO_STATE",
-          muted: currentMuted,
-          volume: currentVolume
-        }, "*");
-      } catch (_) {}
     } else if (data.type === "PREVIEW_TRIGGER_PIP") {
       const video = videoElement || document.querySelector("video");
       if (video) {

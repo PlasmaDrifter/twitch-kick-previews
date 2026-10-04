@@ -847,11 +847,6 @@
         this.isTiled = true;
         this.updateTiledLayout();
         this.updatePlayTogetherButtons();
-
-        mainWin.sendAudioMessage();
-        if (existingWin) {
-          existingWin.sendAudioMessage();
-        }
         return;
       }
 
@@ -993,41 +988,7 @@
         volume = (typeof video.volume === "number" && !isNaN(video.volume)) ? video.volume : 0.8;
       }
 
-      // Check Twitch localStorage fallback
-      try {
-        const storedMuted = localStorage.getItem("video-muted");
-        if (storedMuted !== null) {
-          try {
-            const parsed = JSON.parse(storedMuted);
-            if (typeof parsed === "boolean") isMuted = parsed;
-            else if (parsed && typeof parsed.default === "boolean") isMuted = parsed.default;
-          } catch (_) {
-            if (storedMuted === "true") isMuted = true;
-            if (storedMuted === "false") isMuted = false;
-          }
-        }
-        const storedVol = localStorage.getItem("volume");
-        if (storedVol !== null) {
-          try {
-            const parsed = JSON.parse(storedVol);
-            if (typeof parsed === "number") volume = parsed;
-            else if (parsed && typeof parsed.default === "number") volume = parsed.default;
-          } catch (_) {
-            const num = parseFloat(storedVol);
-            if (!isNaN(num)) volume = num;
-          }
-        }
-      } catch (_) {}
-
-      // If the DOM video element is explicitly unmuted, trust video.muted
-      if (video && video.muted === false) {
-        isMuted = false;
-        if (typeof video.volume === "number" && !isNaN(video.volume)) {
-          volume = video.volume;
-        }
-      }
-
-      // Check native mute button aria-label as additional check on Twitch
+      // Check native mute button aria-label as read-only check on Twitch
       const muteBtn = document.querySelector('button[data-a-target="player-mute-unmute-button"]');
       if (muteBtn) {
         const label = (muteBtn.getAttribute("aria-label") || muteBtn.innerText || "").toLowerCase();
@@ -1036,6 +997,10 @@
         } else if (label.includes("unmute")) {
           isMuted = true;
         }
+      }
+
+      if (video && video.muted === false) {
+        isMuted = false;
       }
 
       if (volume <= 0) {
@@ -1054,9 +1019,6 @@
         volume: audioState.volume
       };
       if (video) {
-        if (!video.paused) {
-          try { video.pause(); } catch (_) {}
-        }
         video.muted = true;
       }
     }
@@ -1065,31 +1027,11 @@
       if (!this.savedHostVideoState && !updatedAudioState) return;
       const targetMuted = updatedAudioState ? updatedAudioState.muted : (this.savedHostVideoState ? this.savedHostVideoState.muted : false);
       const targetVolume = updatedAudioState ? updatedAudioState.volume : (this.savedHostVideoState ? this.savedHostVideoState.volume : 0.8);
-      const wasPaused = this.savedHostVideoState ? this.savedHostVideoState.paused : false;
 
       const video = this.getHostVideoElement();
       if (video) {
         video.muted = targetMuted;
         video.volume = targetVolume;
-        if (!wasPaused) {
-          try { video.play().catch(() => {}); } catch (_) {}
-        }
-      }
-
-      // Sync Twitch native controls and localStorage
-      try {
-        localStorage.setItem("video-muted", JSON.stringify({ default: targetMuted }));
-        localStorage.setItem("volume", JSON.stringify({ default: targetVolume }));
-      } catch (_) {}
-
-      const muteBtn = document.querySelector('button[data-a-target="player-mute-unmute-button"]');
-      if (muteBtn) {
-        const label = (muteBtn.getAttribute("aria-label") || muteBtn.innerText || "").toLowerCase();
-        if (!targetMuted && label.includes("unmute")) {
-          try { muteBtn.click(); } catch (_) {}
-        } else if (targetMuted && label.includes("mute") && !label.includes("unmute")) {
-          try { muteBtn.click(); } catch (_) {}
-        }
       }
 
       this.savedHostVideoState = null;
