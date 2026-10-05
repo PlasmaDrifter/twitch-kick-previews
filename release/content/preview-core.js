@@ -796,8 +796,13 @@
       }
       previewWin.destroy();
 
-      if (wasAuto) {
+      if (wasAuto && !this.isTiled) {
         this.resumeHostStream(previewAudio);
+      } else if (wasAuto && previewAudio) {
+        if (this.savedHostVideoState) {
+          this.savedHostVideoState.muted = previewAudio.muted;
+          this.savedHostVideoState.volume = previewAudio.volume;
+        }
       }
 
       if (this.isTiled) {
@@ -817,6 +822,8 @@
             this.pinnedWindows.delete(remainingAuto);
             remainingAuto.destroy();
             this.resumeHostStream(autoAudio);
+          } else {
+            this.resumeHostStream();
           }
           this.isTiled = false;
         }
@@ -827,10 +834,10 @@
     }
 
     togglePlayTogether() {
-      // If entering Dual+ with 1 pinned stream on an active channel page
+      // If entering Dual+ / Play Together with 1, 2, or 3 pinned streams on an active channel page
       if (!this.isTiled && this.canTileWithPageStream()) {
         const pageStream = this.getPageStreamInfo();
-        const existingWin = Array.from(this.pinnedWindows)[0];
+        const existingWins = Array.from(this.pinnedWindows);
         this.pauseHostStream();
 
         const mainWin = new PreviewWindow(this, true);
@@ -839,8 +846,8 @@
         const initVolume = this.savedHostVideoState ? this.savedHostVideoState.volume : (this.config.defaultVolume || 0.8);
         mainWin.show(pageStream.platform, pageStream.channel, 0, 0, initMuted, initVolume);
 
-        // Put main stream in slot 0 (left), pinned window in slot 1 (right)
-        const reordered = [mainWin, existingWin];
+        // Put main stream in slot 0 (main stage / left), pinned windows in subsequent slots
+        const reordered = [mainWin, ...existingWins];
         this.pinnedWindows.clear();
         for (const w of reordered) this.pinnedWindows.add(w);
 
@@ -868,11 +875,18 @@
           this.pinnedWindows.delete(autoWin);
           autoWin.destroy();
           this.resumeHostStream(autoAudio);
+        } else {
+          this.resumeHostStream();
         }
         this.isTiled = false;
         this.updateTiledLayout();
         this.updatePlayTogetherButtons();
         return;
+      }
+
+      // Entering tiled mode with pinned popups only (e.g. 4 pinned popups or non-channel page)
+      if (this.getPageStreamInfo()) {
+        this.pauseHostStream();
       }
 
       this.isTiled = !this.isTiled;
@@ -965,11 +979,15 @@
     }
 
     canTileWithPageStream() {
-      if (this.isTiled || this.pinnedWindows.size !== 1) return false;
+      if (this.isTiled || this.pinnedWindows.size < 1 || this.pinnedWindows.size > 3) return false;
       const pageStream = this.getPageStreamInfo();
       if (!pageStream) return false;
-      const onlyPinned = Array.from(this.pinnedWindows)[0];
-      return onlyPinned && onlyPinned.channel && onlyPinned.channel.toLowerCase() !== pageStream.channel.toLowerCase();
+      for (const win of this.pinnedWindows) {
+        if (win.channel && win.channel.toLowerCase() === pageStream.channel.toLowerCase()) {
+          return false;
+        }
+      }
+      return true;
     }
 
     getHostVideoElement() {
@@ -1049,7 +1067,9 @@
         if (this.isTiled) {
           win.togetherBtn.title = "Restore Floating Windows (T)";
         } else if (canDualWithPage && pageStream) {
-          win.togetherBtn.title = `Dual+ with Main Stream (${pageStream.channel}) (T)`;
+          const totalStreams = this.pinnedWindows.size + 1;
+          const label = totalStreams === 2 ? "Dual+" : `Play Together (${totalStreams} Streams)`;
+          win.togetherBtn.title = `${label} with Main Stream (${pageStream.channel}) (T)`;
         } else {
           win.togetherBtn.title = "Play Together (Fill Screen) (T)";
         }
