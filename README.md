@@ -2,7 +2,7 @@
 
 **Fast, lightweight live video hover previews, individual volume sliders, multi-stream pinned overlays, and Play Together grid tiling for Firefox.**
 
-[![Firefox Add-on](https://img.shields.io/badge/Firefox-WebExtension%20MV3-FF7139?logo=firefox-browser&logoColor=white)](https://addons.mozilla.org)
+[![Firefox Add-on](https://img.shields.io/badge/Firefox-WebExtension%20MV3-FF7139?logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/stream-previews-twitch-kick/)
 [![Version](https://img.shields.io/badge/version-v0.5.7-38BDF8)](https://github.com/PlasmaDrifter/twitch-kick-previews/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22C55E)](LICENSE)
 [![Twitch](https://img.shields.io/badge/Twitch-Supported-9146FF?logo=twitch&logoColor=white)](https://twitch.tv)
@@ -62,6 +62,7 @@ Access preset resolutions, volume defaults, hover trigger delays, and platform t
 - **Continuous Playback Protection**: Guarded against host player DOM mutations and automated re-muting, ensuring clean uninterrupted sound playback.
 - **Pin Multiple Floating Overlays**: Click the pin icon or press `P` to detach any preview window into a floating overlay. Pin as many simultaneous streams as your hardware allows.
 - **Play Together (Full-Screen Viewport Tiling)**:
+  - 1 Pinned Stream + Active Stream Page: 50/50 horizontal split tiling the main stream and pinned stream side-by-side with automatic host audio management.
   - 2 Streams: 50/50 horizontal split.
   - 3 Streams: Theater multi-view layout (main stage left, stacked secondary right).
   - 4 Streams: 2x2 four-way multi-view grid.
@@ -84,7 +85,7 @@ Access preset resolutions, volume defaults, hover trigger delays, and platform t
 | --- | --- | --- |
 | `M` | Toggle audio (unmute / mute) | Active hovered preview or pinned window |
 | `P` | Pin / Detach stream overlay | Active preview window |
-| `T` | Toggle Play Together / Dual+ grid tiling | Active when 2 to 4 streams are pinned |
+| `T` | Toggle Play Together / Dual+ grid tiling | Active when 2 to 4 streams are pinned, or 1 stream pinned on an active stream page |
 | `S` | Swap positions / Promote to main stage / Open quadrant picker | Active stream tile in Dual+ mode |
 | `1` - `4` | Move stream directly to quadrant (TL, TR, BL, BR) | Hovered stream tile in 4-stream Dual+ mode |
 | `Esc` | Close active preview overlay / Exit tile mode / Close popover | Active preview window or viewport |
@@ -117,14 +118,20 @@ twitch-kick-previews/
 
 ## Installation
 
-### Direct XPI Installation
-1. Download `release/twitch-kick-previews.xpi` from this repository.
-2. Open Firefox and go to `about:addons`.
-3. Click the gear icon in the top-right corner and select **"Install Add-on From File..."**.
-4. Select the downloaded `twitch-kick-previews.xpi`.
+### Official Firefox Add-on (Recommended)
 
-### From Firefox Add-ons (AMO)
-Install the signed add-on directly from [addons.mozilla.org](https://addons.mozilla.org) once published.
+Install Stream Previews directly from the official Mozilla Add-ons directory:
+
+**[Get Stream Previews on addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/stream-previews-twitch-kick/)**
+
+Once installed, future updates are delivered and installed automatically by Firefox.
+
+### Direct XPI Installation (GitHub Releases)
+
+1. Download `twitch-kick-previews.xpi` from the [Latest Release](https://github.com/PlasmaDrifter/twitch-kick-previews/releases/latest).
+2. Open Firefox and go to `about:addons` (or press `Ctrl+Shift+A` / `Cmd+Shift+A`).
+3. Click the gear icon in the top-right corner and select **"Install Add-on From File..."**.
+4. Select the downloaded `twitch-kick-previews.xpi` file.
 
 ### Manual / Developer Installation
 1. Clone this repository:

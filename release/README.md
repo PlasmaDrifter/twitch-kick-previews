@@ -2,7 +2,7 @@
 
 A lightweight, bloat-free Firefox WebExtension for live video hover previews on Twitch and Kick.
 
-[![Firefox Add-on](https://img.shields.io/badge/Firefox-WebExtension%20MV3-FF7139?logo=firefox-browser&logoColor=white)](https://addons.mozilla.org)
+[![Firefox Add-on](https://img.shields.io/badge/Firefox-WebExtension%20MV3-FF7139?logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/stream-previews-twitch-kick/)
 [![Version](https://img.shields.io/badge/version-v0.5.7-38BDF8)](https://github.com/PlasmaDrifter/twitch-kick-previews/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22C55E)](LICENSE)
 [![Twitch](https://img.shields.io/badge/Twitch-Supported-9146FF?logo=twitch&logoColor=white)](https://twitch.tv)
@@ -13,7 +13,7 @@ A lightweight, bloat-free Firefox WebExtension for live video hover previews on 
 - **Audio Controls**: Muted by default with an instant audio unmute/mute button on the preview header and keyboard shortcut (`M`).
 - **Detach & Pin Overlay**: Click the Pin button or press `P` to freeze any preview in place as a persistent floating overlay.
 - **Multiple Pinned Overlays**: Pin multiple streams simultaneously. Hover previews continue working seamlessly on other channels.
-- **Play Together (Fill Screen Multi-View)**: When 2 to 4 streams are pinned, click the Dual+ button or press `T` to tile them into a full-screen multi-stream layout (2-stream split, 3-stream theater, or 4-stream 2x2 grid). Click again to restore your previous floating positions.
+- **Play Together (Fill Screen Multi-View)**: When 2 to 4 streams are pinned, or when 1 stream is pinned on an active stream page, click the Dual+ button or press `T` to tile them into a full-screen multi-stream layout (2-stream split, 3-stream theater, or 4-stream 2x2 grid). Click again to restore your previous floating positions.
 - **Drag-and-Drop Tile Swapping**: Click and drag from any stream header in Dual+ mode to swap positions with another stream tile without video reloading or audio interruption.
 - **4-Way Move & Quadrant Popover**: In 4-stream Dual+ mode, use the electric-cyan 4-way move button (`✥`) or press `S` to open an instant quadrant picker (`TL`, `TR`, `BL`, `BR`).
 - **Direct Number Hotkeys**: Press `1`, `2`, `3`, or `4` while hovering any stream in 4-stream Dual+ mode to assign it directly into that corner.
@@ -26,8 +26,14 @@ A lightweight, bloat-free Firefox WebExtension for live video hover previews on 
 
 ## Installation in Firefox
 
+### Official Firefox Add-on (Recommended)
+Install directly from Mozilla Add-ons:
+**[Get Stream Previews on addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/stream-previews-twitch-kick/)**
+
+Once installed, future updates are delivered and installed automatically by Firefox.
+
 ### Direct XPI Installation
-1. Download `twitch-kick-previews.xpi`.
+1. Download `twitch-kick-previews.xpi` from the [Latest Release](https://github.com/PlasmaDrifter/twitch-kick-previews/releases/latest).
 2. Open Firefox and go to `about:addons`.
 3. Click the gear icon in the top-right corner and select **"Install Add-on From File..."**.
 4. Select the downloaded `twitch-kick-previews.xpi` file.
@@ -47,7 +53,7 @@ To build or update the packaged `.zip` and `.xpi` archives, run:
 ## Keyboard Shortcuts & Controls
 - `M`: Toggle audio (mute / unmute).
 - `P`: Pin / Detach overlay.
-- `T`: Play Together / Dual+ (tile 2-4 pinned streams to fill screen).
+- `T`: Play Together / Dual+ (tile 2-4 pinned streams, or 1 pinned stream + active page stream to fill screen).
 - `S`: Swap positions / Promote to main stage / Open quadrant picker in Dual+ mode.
 - `1` - `4`: Assign hovered stream to quadrant (TL, TR, BL, BR) in 4-stream Dual+ mode.
 - `Esc`: Close the active preview, exit tiled mode, or close the quadrant popover.
