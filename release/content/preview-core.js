@@ -486,6 +486,9 @@
       if (!this.pinBtn) return;
       this.pinBtn.classList.toggle("sp-pinned-active", this.isPinned);
       this.pinBtn.title = this.isPinned ? "Unpin / Close (P)" : "Pin / Detach (P)";
+      if (!this.isPinned) {
+        this.pinBtn.style.color = "";
+      }
     }
 
     sendAudioMessage() {
@@ -654,8 +657,12 @@
               win.applySize(this.config.previewWidth);
             }
           }
-          if ((changes.tiledBorderEnabled || changes.tiledBorderMode || changes.tiledBorderCustomColor) && this.isTiled) {
-            this.updateTiledLayout();
+          if (changes.tiledBorderEnabled || changes.tiledBorderMode || changes.tiledBorderCustomColor) {
+            if (this.isTiled) {
+              this.updateTiledLayout();
+            } else {
+              this.updatePinnedBorders();
+            }
           }
         });
       }
@@ -784,6 +791,8 @@
 
       if (this.isTiled) {
         this.updateTiledLayout();
+      } else {
+        this.updatePinnedBorders();
       }
     }
 
@@ -795,6 +804,7 @@
         this.activeWindow = null;
       }
       previewWin.destroy();
+      this.updatePinnedBorders();
 
       if (wasAuto && !this.isTiled) {
         this.resumeHostStream(previewAudio);
@@ -908,7 +918,11 @@
       for (const w of newList) {
         this.pinnedWindows.add(w);
       }
-      this.updateTiledLayout();
+      if (this.isTiled) {
+        this.updateTiledLayout();
+      } else {
+        this.updatePinnedBorders();
+      }
     }
 
     swapPinnedWindows(winA, winB) {
@@ -1076,6 +1090,52 @@
       }
     }
 
+    getBorderColor(index = 0) {
+      const borderMode = this.config.tiledBorderMode || "distinct";
+      const customColor = this.config.tiledBorderCustomColor || "#9146ff";
+      const DISTINCT_COLORS = ["#9146ff", "#22c55e", "#00e5ff", "#ff7538"];
+
+      if (borderMode === "distinct") {
+        return DISTINCT_COLORS[index % DISTINCT_COLORS.length];
+      } else if (borderMode === "custom") {
+        return customColor;
+      } else if (borderMode === "green") {
+        return "#22c55e";
+      } else if (borderMode === "cyan") {
+        return "#00e5ff";
+      } else if (borderMode === "orange") {
+        return "#ff7538";
+      } else {
+        return "#9146ff";
+      }
+    }
+
+    updatePinnedBorders() {
+      const pinned = Array.from(this.pinnedWindows);
+      const borderEnabled = this.config.tiledBorderEnabled !== false;
+
+      for (let i = 0; i < pinned.length; i++) {
+        const win = pinned[i];
+        if (!win || !win.container) continue;
+        if (this.isTiled) continue;
+
+        if (borderEnabled) {
+          const color = this.getBorderColor(i);
+          win.container.style.setProperty("--sp-pinned-border", color);
+          win.container.style.boxShadow = `0 20px 48px rgba(0, 0, 0, 0.9), 0 0 0 2px ${color}`;
+          if (win.pinBtn && win.isPinned) {
+            win.pinBtn.style.color = color;
+          }
+        } else {
+          win.container.style.removeProperty("--sp-pinned-border");
+          win.container.style.boxShadow = "0 20px 48px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.15)";
+          if (win.pinBtn && win.isPinned) {
+            win.pinBtn.style.color = "";
+          }
+        }
+      }
+    }
+
     updateTiledLayout() {
       const pinned = Array.from(this.pinnedWindows);
 
@@ -1093,6 +1153,7 @@
             win.applySize(win.width);
           }
         }
+        this.updatePinnedBorders();
         this.updatePlayTogetherButtons();
         return;
       }
@@ -1101,10 +1162,7 @@
       const W = window.innerWidth;
       const H = window.innerHeight;
 
-      const DISTINCT_COLORS = ["#9146ff", "#22c55e", "#00e5ff", "#ff7538"];
       const borderEnabled = this.config.tiledBorderEnabled !== false;
-      const borderMode = this.config.tiledBorderMode || "distinct";
-      const customColor = this.config.tiledBorderCustomColor || "#9146ff";
 
       const gap = borderEnabled ? 4 : 0;
       const halfW = borderEnabled ? Math.floor((W - (gap * 3)) / 2) : Math.floor(W / 2);
@@ -1133,25 +1191,21 @@
 
         let borderColor = "";
         if (borderEnabled) {
-          if (borderMode === "distinct") {
-            borderColor = DISTINCT_COLORS[i % DISTINCT_COLORS.length];
-          } else if (borderMode === "custom") {
-            borderColor = customColor;
-          } else if (borderMode === "green") {
-            borderColor = "#22c55e";
-          } else if (borderMode === "cyan") {
-            borderColor = "#00e5ff";
-          } else if (borderMode === "orange") {
-            borderColor = "#ff7538";
-          } else {
-            borderColor = "#9146ff";
-          }
+          borderColor = this.getBorderColor(i);
         }
 
         if (borderColor) {
+          win.container.style.setProperty("--sp-pinned-border", borderColor);
           win.container.style.boxShadow = `0 0 0 2px ${borderColor}, 0 8px 30px rgba(0, 0, 0, 0.9)`;
+          if (win.pinBtn && win.isPinned) {
+            win.pinBtn.style.color = borderColor;
+          }
         } else {
+          win.container.style.removeProperty("--sp-pinned-border");
           win.container.style.boxShadow = "none";
+          if (win.pinBtn && win.isPinned) {
+            win.pinBtn.style.color = "";
+          }
         }
 
         if (win.swapBtn) {

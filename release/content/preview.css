@@ -26,7 +26,7 @@
 
 .sp-pinned-window {
   z-index: 2147483647;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(145, 70, 255, 0.7);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 0 2px var(--sp-pinned-border, rgba(145, 70, 255, 0.7));
 }
 
 /* Play Together Tiled Layout */
@@ -214,7 +214,7 @@
 }
 
 .sp-btn-pin.sp-pinned-active {
-  color: #a970ff;
+  color: var(--sp-pinned-border, #a970ff);
   background: transparent;
   border-color: transparent;
 }
@@ -224,8 +224,9 @@
 }
 
 .sp-btn-pin.sp-pinned-active:hover {
-  background: rgba(145, 70, 255, 0.15);
-  color: #c499ff;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--sp-pinned-border, #c499ff);
+  filter: brightness(1.2);
 }
 
 .sp-btn-together {
