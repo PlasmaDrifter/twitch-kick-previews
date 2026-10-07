@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Stream Previews (Twitch & Kick)",
-  "version": "0.5.9",
+  "version": "0.6.0",
   "description": "Lightweight live video hover previews for Twitch and Kick with adjustable size, sound controls, multi-pin overlays, and Play Together grid tiling.",
   "icons": {
     "16": "icons/icon-16.png",
