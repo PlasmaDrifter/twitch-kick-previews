@@ -13,7 +13,7 @@
         <img class="logo-icon" src="../icons/icon-32.png" alt="Logo">
         <h1>Stream Previews</h1>
       </div>
-      <span class="version">v0.5.8</span>
+      <span class="version">v0.5.9</span>
     </header>
 
     <main class="content">
@@ -59,8 +59,13 @@
 
       <!-- Dual+ Multi-View Borders -->
       <section class="section">
+        <label class="section-title">
+          <span>Dual+ Stream Borders</span>
+          <span id="borderModeDisplay" class="value-badge">Distinct</span>
+        </label>
+
         <label class="toggle-row">
-          <span class="toggle-label">Dual+ Colored Borders</span>
+          <span class="toggle-label">Enable borders in Play Together</span>
           <input type="checkbox" id="tiledBorderEnabled" checked>
           <span class="switch"></span>
         </label>
@@ -81,10 +86,39 @@
           <button type="button" class="swatch-btn" data-mode="orange" data-color="#ff7538" title="Neon Orange">
             <span class="swatch-preview" style="background-color: #ff7538;"></span>
           </button>
-          <label class="swatch-btn swatch-custom-wrapper" title="Custom Color">
-            <input type="color" id="tiledBorderCustomColor" value="#9146ff">
-            <span class="swatch-preview swatch-custom-indicator" id="customColorIndicator" style="background-color: #9146ff;"></span>
-          </label>
+          <button type="button" class="swatch-btn swatch-custom-btn" id="customColorBtn" data-mode="custom" title="Custom Color Picker">
+            <span class="swatch-preview swatch-custom-indicator" id="customColorIndicator" style="background-color: #9146ff;">
+              <svg class="swatch-pipette-icon" viewBox="0 0 24 24" width="12" height="12">
+                <path d="M20.71 5.63l-2.34-2.34a1 1 0 0 0-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.92-1.92 3.12-3.12a1 1 0 0 0 .01-1.42zM6.92 19H5v-1.92l8.06-8.06 1.92 1.92L6.92 19z"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+
+        <!-- In-Popup Custom Color Picker Panel -->
+        <div class="custom-color-panel hidden" id="customColorPanel">
+          <div class="custom-chips-row">
+            <button type="button" class="color-chip" data-color="#ef4444" style="background-color: #ef4444;" title="Red"></button>
+            <button type="button" class="color-chip" data-color="#f97316" style="background-color: #f97316;" title="Orange"></button>
+            <button type="button" class="color-chip" data-color="#eab308" style="background-color: #eab308;" title="Yellow"></button>
+            <button type="button" class="color-chip" data-color="#84cc16" style="background-color: #84cc16;" title="Lime"></button>
+            <button type="button" class="color-chip" data-color="#22c55e" style="background-color: #22c55e;" title="Green"></button>
+            <button type="button" class="color-chip" data-color="#06b6d4" style="background-color: #06b6d4;" title="Cyan"></button>
+            <button type="button" class="color-chip" data-color="#3b82f6" style="background-color: #3b82f6;" title="Blue"></button>
+            <button type="button" class="color-chip" data-color="#9146ff" style="background-color: #9146ff;" title="Purple"></button>
+            <button type="button" class="color-chip" data-color="#ec4899" style="background-color: #ec4899;" title="Pink"></button>
+            <button type="button" class="color-chip" data-color="#ffffff" style="background-color: #ffffff;" title="White"></button>
+          </div>
+          <div class="picker-bottom-row">
+            <span class="custom-preview-dot" id="pickerPreviewDot" title="Current shade preview"></span>
+            <div class="shade-slider-track">
+              <input type="range" id="customShadeSlider" min="0" max="100" value="50" class="shade-slider" title="Drag left for darker shades, right for lighter shades">
+            </div>
+            <div class="custom-hex-box">
+              <span class="custom-hex-prefix">#</span>
+              <input type="text" id="customHexInput" class="custom-hex-input" maxlength="6" placeholder="9146FF" spellcheck="false" title="Hex code">
+            </div>
+          </div>
         </div>
       </section>
 
