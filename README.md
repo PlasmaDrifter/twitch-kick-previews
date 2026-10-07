@@ -3,7 +3,7 @@
 **Fast, lightweight live video hover previews, individual volume sliders, multi-stream pinned overlays, and Play Together grid tiling for Firefox.**
 
 [![Firefox Add-on](https://img.shields.io/badge/Firefox-WebExtension%20MV3-FF7139?logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/stream-previews-twitch-kick/)
-[![Version](https://img.shields.io/badge/version-v0.6.0-38BDF8)](https://github.com/PlasmaDrifter/twitch-kick-previews/releases/latest)
+[![Version](https://img.shields.io/badge/version-v0.6.1-38BDF8)](https://github.com/PlasmaDrifter/twitch-kick-previews/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-22C55E)](LICENSE)
 [![Twitch](https://img.shields.io/badge/Twitch-Supported-9146FF?logo=twitch&logoColor=white)](https://twitch.tv)
 [![Kick](https://img.shields.io/badge/Kick-Supported-22C55E)](https://kick.com)
