@@ -12,9 +12,20 @@
 
   // Quality settings from URL query params
   // qualityMode: "fast" (default: 480p hover, source on pin), "dynamic" (480p -> source after 3.5s), "auto" (platform default)
-  let qualityMode = urlParams.get("qualityMode") || "fast";
+  const rawMode = urlParams.get("qualityMode") || "fast";
+  let qualityMode = (rawMode === "dynamic" || rawMode === "auto") ? rawMode : "fast";
   let isPinned = urlParams.get("pinned") === "true";
-  let targetQuality = urlParams.get("quality") || (isPinned ? "chunked" : "480p");
+
+  function sanitizeQuality(val) {
+    if (!val || typeof val !== "string") return "480p";
+    const cleaned = val.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (cleaned === "chunked" || cleaned === "source" || cleaned === "auto") return cleaned;
+    const match = cleaned.match(/^(\d{3,4})p?$/);
+    if (match) return `${match[1]}p`;
+    return "480p";
+  }
+
+  let targetQuality = sanitizeQuality(urlParams.get("quality") || (isPinned ? "chunked" : "480p"));
 
   let videoElement = null;
   let gateDismissed = false;
@@ -24,9 +35,11 @@
   function injectPageQualityController() {
     try {
       const script = document.createElement("script");
+      script.dataset.quality = targetQuality;
       script.textContent = `
         (() => {
           let lastAppliedQuality = null;
+          let pendingQuality = (document.currentScript && document.currentScript.dataset && document.currentScript.dataset.quality) || null;
 
           function getPlayerInstance() {
             try {
@@ -146,8 +159,12 @@
           window.addEventListener("message", (e) => {
             if (!e.data || typeof e.data !== "object") return;
             if (e.data.type === "SP_PAGE_SET_QUALITY") {
-              if (!applyStreamQuality(e.data.targetQuality)) {
-                scheduleQualityRetry(e.data.targetQuality);
+              const q = typeof e.data.targetQuality === "string" ? e.data.targetQuality : null;
+              if (q) {
+                pendingQuality = q;
+                if (!applyStreamQuality(q)) {
+                  scheduleQualityRetry(q);
+                }
               }
             }
           });
@@ -156,7 +173,7 @@
           let earlyCheckCount = 0;
           const earlyCheckInterval = setInterval(() => {
             earlyCheckCount++;
-            const currentTarget = "${targetQuality}";
+            const currentTarget = pendingQuality;
             if (currentTarget && currentTarget !== "auto") {
               if (applyStreamQuality(currentTarget)) {
                 clearInterval(earlyCheckInterval);
@@ -177,11 +194,12 @@
   injectPageQualityController();
 
   function dispatchPageQuality(q) {
-    if (!q || q === "auto") return;
+    const safeQ = sanitizeQuality(q);
+    if (!safeQ || safeQ === "auto") return;
     try {
       window.postMessage({
         type: "SP_PAGE_SET_QUALITY",
-        targetQuality: q
+        targetQuality: safeQ
       }, "*");
     } catch (_) {}
   }
@@ -366,9 +384,11 @@
         applyAudioState(video);
       }
     } else if (data.type === "PREVIEW_SET_QUALITY") {
-      if (data.qualityMode) qualityMode = data.qualityMode;
+      if (data.qualityMode && (data.qualityMode === "dynamic" || data.qualityMode === "auto" || data.qualityMode === "fast")) {
+        qualityMode = data.qualityMode;
+      }
       if (data.quality) {
-        targetQuality = data.quality;
+        targetQuality = sanitizeQuality(data.quality);
         qualityConfigured = false;
         dispatchPageQuality(targetQuality);
       }
