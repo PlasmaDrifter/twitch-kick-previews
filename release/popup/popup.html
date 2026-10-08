@@ -36,6 +36,26 @@
         </div>
       </section>
 
+      <!-- Stream Quality -->
+      <section class="section">
+        <label class="section-title">
+          <span>Stream Quality</span>
+          <span id="qualityModeDisplay" class="value-badge">Lite (480p)</span>
+        </label>
+        
+        <div class="preset-buttons quality-buttons">
+          <button type="button" class="quality-btn active" data-mode="fast" title="480p bandwidth saver: ideal for slower connections or multiple pinned streams. Upgrades to Source when pinned.">Lite (480p)</button>
+          <button type="button" class="quality-btn" data-mode="dynamic" title="Starts at 480p, automatically steps up to Source after 3s">Dynamic</button>
+          <button type="button" class="quality-btn" data-mode="auto" title="Standard platform adaptive bitrate">Auto</button>
+        </div>
+
+        <label class="toggle-row quality-stats-toggle">
+          <span class="toggle-label">Show quality & speed badge in header</span>
+          <input type="checkbox" id="showStatsBadge" checked>
+          <span class="switch"></span>
+        </label>
+      </section>
+
       <!-- Audio Options -->
       <section class="section">
         <span class="section-title">Audio & Sound</span>

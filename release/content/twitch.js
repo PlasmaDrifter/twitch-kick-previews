@@ -80,15 +80,63 @@
     if (!channel) return;
 
     activeTarget = targetLink;
-    const rect = targetLink.getBoundingClientRect();
+
+    // Resolve card or sidebar container
+    const sideCard = targetLink.closest('[data-test-selector="followed-channel"], .side-nav-card, [data-a-target="side-nav-card"]');
+    let cardContainer = null;
+    if (!sideCard) {
+      cardContainer = targetLink.closest('article, [data-target="directory-card"], [data-a-target="preview-card"], .tw-tower > div, [data-target="directory-page__card-container"]');
+      if (!cardContainer) {
+        let cur = targetLink.parentElement;
+        for (let i = 0; i < 10 && cur; i++) {
+          if (cur.querySelector('[data-a-target="stream-title"], [data-a-target="preview-card-title-link"], h3')) {
+            cardContainer = cur;
+            break;
+          }
+          cur = cur.parentElement;
+        }
+      }
+    }
+
+    // Measure non-zero bounding rect
+    let rect = null;
+    const containerEl = sideCard || cardContainer;
+    if (containerEl) {
+      const cRect = containerEl.getBoundingClientRect();
+      if (cRect.width > 0 && cRect.height > 0) {
+        rect = cRect;
+      }
+    }
+
+    if (!rect) {
+      const lRect = targetLink.getBoundingClientRect();
+      if (lRect.width > 0 && lRect.height > 0) {
+        rect = lRect;
+      } else if (targetLink.firstElementChild) {
+        const fRect = targetLink.firstElementChild.getBoundingClientRect();
+        if (fRect.width > 0 && fRect.height > 0) {
+          rect = fRect;
+        }
+      }
+    }
+
+    // Ultimate fallback if DOM element has zero dimensions (e.g. display: contents)
+    if (!rect || (rect.width === 0 && rect.height === 0) || (rect.top === 0 && rect.bottom === 0 && rect.left === 0 && rect.right === 0)) {
+      rect = {
+        left: event.clientX - 16,
+        right: event.clientX + 16,
+        top: event.clientY - 16,
+        bottom: event.clientY + 16,
+        width: 32,
+        height: 32
+      };
+    }
 
     // Extract stream title or category
     let streamTitle = "";
 
-    // 1. Sidebar followed channels (e.g. data-test-selector="followed-channel")
-    const sideCard = targetLink.closest('[data-test-selector="followed-channel"], .side-nav-card, [data-a-target="side-nav-card"]');
+    // 1. Sidebar followed channels
     if (sideCard) {
-      // Direct innerText split: Twitch sidebar has Channel \n Category \n Live \n ViewerCount
       const lines = (sideCard.innerText || sideCard.textContent || "")
         .split("\n")
         .map(s => s.trim())
@@ -102,37 +150,22 @@
 
     // 2. Main browse cards / directory cards
     if (!streamTitle) {
-      // Direct link attributes
       const targetTitle = (targetLink.getAttribute("title") || targetLink.getAttribute("aria-label") || "").trim();
       if (targetTitle && targetTitle.toLowerCase() !== channel.toLowerCase()) {
         streamTitle = targetTitle;
       }
     }
 
-    if (!streamTitle) {
-      let cardContainer = targetLink.closest('article, [data-target="directory-card"], [data-a-target="preview-card"], .tw-tower > div, [data-target="directory-page__card-container"]');
-      if (!cardContainer) {
-        let cur = targetLink.parentElement;
-        for (let i = 0; i < 10 && cur; i++) {
-          if (cur.querySelector('[data-a-target="stream-title"], [data-a-target="preview-card-title-link"], h3')) {
-            cardContainer = cur;
-            break;
-          }
-          cur = cur.parentElement;
-        }
+    if (!streamTitle && cardContainer) {
+      const titleElem = cardContainer.querySelector('[data-a-target="stream-title"]');
+      if (titleElem) {
+        streamTitle = (titleElem.getAttribute("title") || titleElem.textContent || "").trim();
       }
 
-      if (cardContainer) {
-        const titleElem = cardContainer.querySelector('[data-a-target="stream-title"]');
-        if (titleElem) {
-          streamTitle = (titleElem.getAttribute("title") || titleElem.textContent || "").trim();
-        }
-
-        if (!streamTitle) {
-          const titleLink = cardContainer.querySelector('a[data-a-target="preview-card-title-link"], h3');
-          if (titleLink) {
-            streamTitle = (titleLink.getAttribute("title") || titleLink.textContent || "").trim();
-          }
+      if (!streamTitle) {
+        const titleLink = cardContainer.querySelector('a[data-a-target="preview-card-title-link"], h3');
+        if (titleLink) {
+          streamTitle = (titleLink.getAttribute("title") || titleLink.textContent || "").trim();
         }
       }
     }

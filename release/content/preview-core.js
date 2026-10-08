@@ -39,6 +39,7 @@
       this.loader = null;
       this.dot = null;
       this.channelNameEl = null;
+      this.qualityBadgeEl = null;
       this.streamTitleEl = null;
       this.volumeGroup = null;
       this.audioBtn = null;
@@ -60,6 +61,7 @@
           <div class="sp-header-left">
             <span class="sp-dot"></span>
             <span class="sp-channel-name"></span>
+            <span class="sp-quality-badge" title="Stream Quality">Auto</span>
             <span class="sp-stream-title"></span>
           </div>
           <div class="sp-header-right">
@@ -130,6 +132,8 @@
         </div>
       `;
 
+      container.style.left = "-9999px";
+      container.style.top = "-9999px";
       document.body.appendChild(container);
 
       this.container = container;
@@ -138,6 +142,10 @@
       this.loader = container.querySelector(".sp-loader");
       this.dot = container.querySelector(".sp-dot");
       this.channelNameEl = container.querySelector(".sp-channel-name");
+      this.qualityBadgeEl = container.querySelector(".sp-quality-badge");
+      if (this.qualityBadgeEl) {
+        this.qualityBadgeEl.style.display = this.core.config.showStatsBadge !== false ? "" : "none";
+      }
       this.streamTitleEl = container.querySelector(".sp-stream-title");
       this.volumeGroup = container.querySelector(".sp-volume-group");
       this.audioBtn = container.querySelector(".sp-btn-audio");
@@ -261,6 +269,14 @@
 
       this.iframe.addEventListener("load", () => {
         this.loader.classList.add("sp-loaded");
+        if (this.showStartTime && !this.lastReportedLoadTime) {
+          const elapsedMs = Math.round(performance.now() - this.showStartTime);
+          const elapsedSec = (elapsedMs / 1000).toFixed(2);
+          this.lastReportedLoadTime = elapsedSec;
+          const currentLabel = (this.qualityBadgeEl && this.qualityBadgeEl.textContent ? this.qualityBadgeEl.textContent.split(" ")[0] : "Ready");
+          this.updateQualityBadge(currentLabel, elapsedSec);
+          console.log(`[Stream Previews] Hover preview ready in ${elapsedMs}ms (${elapsedSec}s) for ${this.channel || "stream"}`);
+        }
         this.sendAudioMessage();
         setTimeout(() => this.sendAudioMessage(), 400);
         setTimeout(() => this.sendAudioMessage(), 1200);
@@ -430,7 +446,8 @@
     }
 
     applySize(width) {
-      const clampedWidth = Math.max(280, Math.min(1280, width));
+      const numW = Number(width);
+      const clampedWidth = Math.max(280, Math.min(1280, isNaN(numW) ? 480 : numW));
       this.width = clampedWidth;
       this.container.style.width = `${clampedWidth}px`;
 
@@ -557,16 +574,70 @@
     }
 
     buildPlayerUrl(platform, channel) {
+      const qMode = this.core.config.previewQualityMode || "fast";
+      const qTarget = this.isPinned ? "chunked" : (qMode === "auto" ? "auto" : "480p");
+      const qualityParams = `qualityMode=${encodeURIComponent(qMode)}&pinned=${this.isPinned}&quality=${encodeURIComponent(qTarget)}`;
+
       if (platform === "twitch") {
         const host = window.location.hostname || "twitch.tv";
         const parentParam = host !== "twitch.tv"
           ? `parent=${encodeURIComponent(host)}&parent=twitch.tv`
           : "parent=twitch.tv";
-        return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&${parentParam}&muted=${this.isMuted}&volume=${this.currentVolume}&controls=false`;
+        return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&${parentParam}&muted=${this.isMuted}&volume=${this.currentVolume}&controls=false&${qualityParams}`;
       } else if (platform === "kick") {
-        return `https://player.kick.com/${encodeURIComponent(channel)}?autoplay=true&muted=${this.isMuted}&volume=${this.currentVolume}`;
+        return `https://player.kick.com/${encodeURIComponent(channel)}?autoplay=true&muted=${this.isMuted}&volume=${this.currentVolume}&${qualityParams}`;
       }
       return "about:blank";
+    }
+
+    sendQualityMessage(quality) {
+      if (this.iframe && this.iframe.contentWindow) {
+        try {
+          const qMode = this.core.config.previewQualityMode || "fast";
+          const target = quality || (this.isPinned ? "chunked" : (qMode === "auto" ? "auto" : "480p"));
+          this.iframe.contentWindow.postMessage({
+            type: "PREVIEW_SET_QUALITY",
+            qualityMode: qMode,
+            quality: target
+          }, "*");
+        } catch (_) {}
+      }
+    }
+
+    updateQualityBadge(label, loadTimeSec = null) {
+      if (!this.qualityBadgeEl || !label) return;
+      if (this.core.config.showStatsBadge === false) {
+        this.qualityBadgeEl.style.display = "none";
+        return;
+      }
+      this.qualityBadgeEl.style.display = "";
+      const cleanLabel = String(label).trim();
+      if (loadTimeSec) {
+        this.lastReportedLoadTime = loadTimeSec;
+      }
+      const timeToUse = loadTimeSec || this.lastReportedLoadTime;
+      const qMode = this.core.config.previewQualityMode || "fast";
+      let modeDesc = "";
+      if (qMode === "fast") {
+        modeDesc = "Lite (480p) - Low bandwidth for multiple streams / slower connections";
+      } else if (qMode === "dynamic") {
+        modeDesc = "Dynamic - 480p preview, auto-upgrades to Source after 3s";
+      } else {
+        modeDesc = "Auto - Adaptive bitrate (1080p source)";
+      }
+
+      if (timeToUse) {
+        this.qualityBadgeEl.textContent = `${cleanLabel} · ${timeToUse}s`;
+        this.qualityBadgeEl.title = `${modeDesc} (Loaded in ${timeToUse}s)`;
+      } else {
+        this.qualityBadgeEl.textContent = cleanLabel;
+        this.qualityBadgeEl.title = modeDesc;
+      }
+      if (cleanLabel.toLowerCase() === "source" || cleanLabel === "1080p") {
+        this.qualityBadgeEl.classList.add("source");
+      } else {
+        this.qualityBadgeEl.classList.remove("source");
+      }
     }
 
     show(platform, channel, x, y, initialMuted = undefined, initialVolume = undefined, streamTitle = "") {
@@ -593,13 +664,26 @@
       this.dot.className = `sp-dot ${platform}`;
       this.channelNameEl.className = `sp-channel-name ${platform}`;
       this.channelNameEl.textContent = channel;
+      this.showStartTime = performance.now();
+      this.lastReportedLoadTime = null;
       if (this.streamTitleEl) {
         this.streamTitleEl.textContent = this.streamTitle ? `· ${this.streamTitle}` : "";
         this.streamTitleEl.title = this.streamTitle || "";
       }
 
-      this.container.style.left = `${x}px`;
-      this.container.style.top = `${y}px`;
+      const qMode = this.core.config.previewQualityMode || "fast";
+      if (this.isPinned) {
+        this.updateQualityBadge("Source");
+      } else if (qMode === "fast") {
+        this.updateQualityBadge("480p");
+      } else if (qMode === "dynamic") {
+        this.updateQualityBadge("480p");
+      } else {
+        this.updateQualityBadge("Auto");
+      }
+
+      this.container.style.left = `${Math.round(x)}px`;
+      this.container.style.top = `${Math.round(y)}px`;
 
       this.loader.classList.remove("sp-loaded");
       this.iframe.src = this.buildPlayerUrl(platform, channel);
@@ -636,6 +720,8 @@
         hoverDelayMs: 300,
         defaultMuted: true,
         defaultVolume: 0.8,
+        previewQualityMode: "fast",
+        showStatsBadge: true,
         tiledBorderEnabled: true,
         tiledBorderMode: "distinct",
         tiledBorderCustomColor: "#9146ff"
@@ -662,16 +748,39 @@
         }
       } catch (_) {}
 
+      const numW = Number(this.config.previewWidth);
+      this.config.previewWidth = (!isNaN(numW) && numW >= 280) ? numW : 480;
+
       if (storageApi.onChanged) {
         storageApi.onChanged.addListener((changes, area) => {
           if (area !== "local") return;
           for (const [key, change] of Object.entries(changes)) {
             this.config[key] = change.newValue;
           }
-          if (changes.previewWidth && !this.isTiled) {
-            if (this.hoverWindow) this.hoverWindow.applySize(this.config.previewWidth);
+          if (changes.showStatsBadge !== undefined) {
+            const show = changes.showStatsBadge.newValue !== false;
+            if (this.hoverWindow && this.hoverWindow.qualityBadgeEl) {
+              this.hoverWindow.qualityBadgeEl.style.display = show ? "" : "none";
+            }
             for (const win of this.pinnedWindows) {
-              win.applySize(this.config.previewWidth);
+              if (win.qualityBadgeEl) {
+                win.qualityBadgeEl.style.display = show ? "" : "none";
+              }
+            }
+          }
+          if (changes.previewQualityMode) {
+            const newMode = changes.previewQualityMode.newValue;
+            if (this.hoverWindow) {
+              this.hoverWindow.sendQualityMessage(newMode === "auto" ? "auto" : "480p");
+            }
+          }
+          if (changes.previewWidth && !this.isTiled) {
+            const wVal = Number(this.config.previewWidth);
+            if (!isNaN(wVal) && wVal >= 280) {
+              if (this.hoverWindow) this.hoverWindow.applySize(wVal);
+              for (const win of this.pinnedWindows) {
+                win.applySize(wVal);
+              }
             }
           }
           if (changes.tiledBorderEnabled || changes.tiledBorderMode || changes.tiledBorderCustomColor) {
@@ -699,13 +808,41 @@
       window.addEventListener("message", (e) => {
         const data = e.data;
         if (!data || typeof data !== "object") return;
+        const wins = [];
+        if (this.hoverWindow) wins.push(this.hoverWindow);
+        for (const w of this.pinnedWindows) wins.push(w);
+
         if (data.type === "PREVIEW_FRAME_READY") {
-          const wins = [];
-          if (this.hoverWindow) wins.push(this.hoverWindow);
-          for (const w of this.pinnedWindows) wins.push(w);
           for (const win of wins) {
             if (win.iframe && win.iframe.contentWindow === e.source) {
               win.sendAudioMessage();
+              break;
+            }
+          }
+        } else if (data.type === "PREVIEW_FIRST_FRAME") {
+          for (const win of wins) {
+            if (win.iframe && win.iframe.contentWindow === e.source) {
+              win.lastReportedLoadTime = data.loadTimeSec;
+              const currentLabel = data.label || (win.qualityBadgeEl ? win.qualityBadgeEl.textContent.split(" ")[0] : "Ready");
+              win.updateQualityBadge(currentLabel, data.loadTimeSec);
+              console.log(`[Stream Previews] Hover-to-playback latency for ${win.channel || "stream"}: ${data.loadTimeMs}ms (${data.loadTimeSec}s)`);
+              break;
+            }
+          }
+        } else if (data.type === "PREVIEW_RESOLUTION_UPDATE") {
+          for (const win of wins) {
+            if (win.iframe && win.iframe.contentWindow === e.source) {
+              if (data.label) {
+                win.updateQualityBadge(data.label, win.lastReportedLoadTime);
+              }
+              break;
+            }
+          }
+        } else if (data.type === "PREVIEW_QUALITY_CONFIRMED") {
+          for (const win of wins) {
+            if (win.iframe && win.iframe.contentWindow === e.source) {
+              const label = data.quality === "chunked" ? "Source" : (data.quality || "Auto");
+              win.updateQualityBadge(label, win.lastReportedLoadTime);
               break;
             }
           }
@@ -797,6 +934,8 @@
       previewWin.container.classList.add("sp-pinned-window");
       previewWin.updatePinButtonUI();
       this.bringToFront(previewWin);
+      previewWin.sendQualityMessage("chunked");
+      previewWin.updateQualityBadge("Source");
 
       this.pinnedWindows.add(previewWin);
 
@@ -881,6 +1020,9 @@
         this.isTiled = true;
         this.updateTiledLayout();
         this.updatePlayTogetherButtons();
+        for (const w of this.pinnedWindows) {
+          w.sendQualityMessage("chunked");
+        }
         return;
       }
 
@@ -1293,30 +1435,54 @@
 
     calculatePosition(targetRect) {
       const margin = 12;
-      const previewWidth = this.config.previewWidth;
-      const previewHeight = (previewWidth * 9 / 16) + 34;
+      const previewWidth = Number(this.config.previewWidth) || 480;
+      const previewHeight = Math.round(previewWidth * 9 / 16) + 34;
       const winW = window.innerWidth;
       const winH = window.innerHeight;
 
-      let x, y;
+      // Determine top navigation offset (Twitch has ~50px top nav, Kick has ~60px)
+      let topNavOffset = 52;
+      try {
+        const topNav = document.querySelector("nav, header, [data-a-target='top-nav-container'], #top-nav-container, .top-nav");
+        if (topNav) {
+          const navRect = topNav.getBoundingClientRect();
+          if (navRect.height > 20 && navRect.top <= 10) {
+            topNavOffset = Math.max(topNavOffset, Math.round(navRect.bottom));
+          }
+        }
+      } catch (_) {}
 
-      const spaceRight = winW - targetRect.right;
-      const spaceLeft = targetRect.left;
+      const minY = topNavOffset + 6;
 
-      if (spaceRight >= previewWidth + margin) {
-        x = targetRect.right + margin;
-      } else if (spaceLeft >= previewWidth + margin) {
-        x = targetRect.left - previewWidth - margin;
-      } else {
-        x = spaceRight > spaceLeft ? targetRect.right - (previewWidth / 2) : targetRect.left - (previewWidth / 2);
+      const rightVal = (targetRect && typeof targetRect.right === "number") ? targetRect.right : 0;
+      const leftVal = (targetRect && typeof targetRect.left === "number") ? targetRect.left : 0;
+      const topVal = (targetRect && typeof targetRect.top === "number") ? targetRect.top : 0;
+      const heightVal = (targetRect && typeof targetRect.height === "number") ? targetRect.height : 0;
+
+      // Robust fallback if targetRect is entirely zero
+      if (rightVal === 0 && leftVal === 0 && topVal === 0) {
+        return { x: 260, y: minY };
       }
 
-      y = targetRect.top + (targetRect.height / 2) - (previewHeight / 2);
+      let x, y;
+
+      const spaceRight = winW - rightVal;
+      const spaceLeft = leftVal;
+
+      if (spaceRight >= previewWidth + margin) {
+        x = rightVal + margin;
+      } else if (spaceLeft >= previewWidth + margin) {
+        x = leftVal - previewWidth - margin;
+      } else {
+        x = spaceRight > spaceLeft ? rightVal - (previewWidth / 2) : leftVal - (previewWidth / 2);
+      }
+
+      y = topVal + (heightVal / 2) - (previewHeight / 2);
 
       x = Math.max(margin, Math.min(x, winW - previewWidth - margin));
-      y = Math.max(margin, Math.min(y, winH - previewHeight - margin));
+      y = Math.max(minY, Math.min(y, winH - previewHeight - margin));
 
-      return { x, y };
+      return { x: Math.round(x), y: Math.round(y) };
     }
 
     requestPreview(platform, channel, targetRect, streamTitle = "") {

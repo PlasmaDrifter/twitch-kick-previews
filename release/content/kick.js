@@ -79,7 +79,25 @@
     }
 
     activeTarget = targetLink;
-    const rect = (inCard || targetLink).getBoundingClientRect();
+    let rect = (inCard || targetLink).getBoundingClientRect();
+    if (!rect || (rect.width === 0 && rect.height === 0) || (rect.top === 0 && rect.bottom === 0 && rect.left === 0 && rect.right === 0)) {
+      if (targetLink.firstElementChild) {
+        const fRect = targetLink.firstElementChild.getBoundingClientRect();
+        if (fRect.width > 0 && fRect.height > 0) {
+          rect = fRect;
+        }
+      }
+    }
+    if (!rect || (rect.width === 0 && rect.height === 0) || (rect.top === 0 && rect.bottom === 0 && rect.left === 0 && rect.right === 0)) {
+      rect = {
+        left: event.clientX - 16,
+        right: event.clientX + 16,
+        top: event.clientY - 16,
+        bottom: event.clientY + 16,
+        width: 32,
+        height: 32
+      };
+    }
 
     // Extract stream title if available on Kick card or sidebar
     let streamTitle = "";

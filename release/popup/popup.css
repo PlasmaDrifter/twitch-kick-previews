@@ -113,7 +113,16 @@ body {
   gap: 5px;
 }
 
-.preset-btn {
+.quality-buttons {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.quality-stats-toggle {
+  margin-top: 6px;
+}
+
+.preset-btn,
+.quality-btn {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
@@ -126,12 +135,14 @@ body {
   text-align: center;
 }
 
-.preset-btn:hover {
+.preset-btn:hover,
+.quality-btn:hover {
   background: var(--bg-hover);
   color: #ffffff;
 }
 
-.preset-btn.active {
+.preset-btn.active,
+.quality-btn.active {
   background: rgba(145, 70, 255, 0.2);
   border-color: var(--accent-purple);
   color: #ffffff;

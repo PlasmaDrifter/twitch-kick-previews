@@ -1,21 +1,21 @@
 /* Stream Previews Overlay Styling */
 
 .sp-window {
-  position: fixed;
-  z-index: 2147483646;
-  background-color: #0e0e10;
+  position: fixed !important;
+  z-index: 2147483646 !important;
+  background-color: #0e0e10 !important;
   border-radius: 8px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
   opacity: 0;
   transform: scale(0.97);
   pointer-events: none;
   transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  font-family: Inter, Roobert, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: Inter, Roobert, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   user-select: none;
-  box-sizing: border-box;
+  box-sizing: border-box !important;
 }
 
 .sp-window.sp-visible {
@@ -25,7 +25,7 @@
 }
 
 .sp-pinned-window {
-  z-index: 2147483647;
+  z-index: 2147483647 !important;
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 0 2px var(--sp-pinned-border, rgba(145, 70, 255, 0.7));
 }
 
@@ -37,8 +37,8 @@
 }
 
 .sp-window.sp-tiled .sp-body {
-  height: calc(100% - 34px);
-  aspect-ratio: unset;
+  height: calc(100% - 34px) !important;
+  aspect-ratio: unset !important;
   flex: 1;
 }
 
@@ -48,21 +48,25 @@
 }
 
 .sp-window.sp-tiled .sp-btn-size {
-  display: none;
+  display: none !important;
 }
 
 .sp-header {
-  height: 34px;
-  background: #18181b;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 8px;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  background: #18181b !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 8px !important;
   gap: 8px;
-  box-sizing: border-box;
-  flex-shrink: 0;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
   cursor: grab;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .sp-header.sp-dragging {
@@ -114,6 +118,26 @@
 
 .sp-channel-name.kick {
   color: #53fc18;
+}
+
+.sp-quality-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #adadb8;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
+}
+
+.sp-quality-badge.source {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.12);
 }
 
 .sp-stream-title {
@@ -326,18 +350,21 @@
 }
 
 .sp-body {
-  position: relative;
-  width: 100%;
+  position: relative !important;
+  width: 100% !important;
   aspect-ratio: 16 / 9;
-  background-color: #000000;
-  overflow: hidden;
+  background-color: #000000 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
 }
 
 .sp-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  display: block !important;
+  box-sizing: border-box !important;
 }
 
 body.sp-dragging-active .sp-iframe {

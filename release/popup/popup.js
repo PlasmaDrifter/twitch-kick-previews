@@ -31,12 +31,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const elements = {
     sizeDisplay: document.getElementById("sizeDisplay"),
     sizeSlider: document.getElementById("sizeSlider"),
-    presetBtns: document.querySelectorAll(".preset-btn"),
+    presetBtns: document.querySelectorAll(".preset-btn[data-width]"),
     defaultMuted: document.getElementById("defaultMuted"),
     volumeSlider: document.getElementById("volumeSlider"),
     volumeDisplay: document.getElementById("volumeDisplay"),
     delaySlider: document.getElementById("delaySlider"),
     delayDisplay: document.getElementById("delayDisplay"),
+    qualityButtons: document.querySelectorAll(".quality-btn"),
+    qualityModeDisplay: document.getElementById("qualityModeDisplay"),
+    showStatsBadge: document.getElementById("showStatsBadge"),
     enabledTwitch: document.getElementById("enabledTwitch"),
     enabledKick: document.getElementById("enabledKick"),
     tiledBorderEnabled: document.getElementById("tiledBorderEnabled"),
@@ -94,6 +97,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     defaultMuted: true,
     defaultVolume: 0.8,
     hoverDelayMs: 300,
+    previewQualityMode: "fast",
+    showStatsBadge: true,
     enabledTwitch: true,
     enabledKick: true,
     tiledBorderEnabled: true,
@@ -114,8 +119,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (_) {}
   }
 
+  // Validate previewWidth from storage
+  const initialWidth = parseInt(config.previewWidth, 10);
+  if (isNaN(initialWidth) || initialWidth < 280) {
+    config.previewWidth = 480;
+    if (storageApi && storageApi.local) {
+      storageApi.local.set({ previewWidth: 480 }).catch(() => {});
+    }
+  } else {
+    config.previewWidth = initialWidth;
+  }
+
   function updateSizeUI(width) {
     const clampedW = parseInt(width, 10);
+    if (isNaN(clampedW)) return;
     const height = Math.round(clampedW * 9 / 16);
     elements.sizeDisplay.textContent = `${clampedW} × ${height} px`;
     elements.sizeSlider.value = clampedW;
@@ -196,16 +213,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  const QUALITY_LABELS = {
+    fast: "Lite (480p)",
+    dynamic: "Dynamic",
+    auto: "Auto"
+  };
+
+  function updateQualityUI(mode) {
+    const effectiveMode = mode || "fast";
+    if (elements.qualityModeDisplay) {
+      elements.qualityModeDisplay.textContent = QUALITY_LABELS[effectiveMode] || "Lite (480p)";
+    }
+    if (elements.qualityButtons) {
+      elements.qualityButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.mode === effectiveMode);
+      });
+    }
+  }
+
   // Initial populate
   updateSizeUI(config.previewWidth);
+  updateQualityUI(config.previewQualityMode);
   updateVolumeUI(config.defaultVolume);
   updateDelayUI(config.hoverDelayMs);
   updateBorderUI(config.tiledBorderEnabled, config.tiledBorderMode, config.tiledBorderCustomColor, config.tiledBorderBaseColor, config.tiledBorderShade);
   elements.defaultMuted.checked = config.defaultMuted;
+  if (elements.showStatsBadge) {
+    elements.showStatsBadge.checked = config.showStatsBadge !== false;
+  }
   elements.enabledTwitch.checked = config.enabledTwitch;
   elements.enabledKick.checked = config.enabledKick;
 
   function saveConfig(updated) {
+    if (updated.previewWidth !== undefined) {
+      const parsed = parseInt(updated.previewWidth, 10);
+      if (isNaN(parsed) || parsed < 280) return;
+      updated.previewWidth = parsed;
+    }
     config = { ...config, ...updated };
     if (storageApi && storageApi.local) {
       try {
@@ -301,10 +345,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // Quality buttons
+  if (elements.qualityButtons) {
+    elements.qualityButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.mode;
+        updateQualityUI(mode);
+        saveConfig({ previewQualityMode: mode });
+      });
+    });
+  }
+
+  // Quality & stats badge toggle
+  if (elements.showStatsBadge) {
+    elements.showStatsBadge.addEventListener("change", (e) => {
+      saveConfig({ showStatsBadge: e.target.checked });
+    });
+  }
+
   // Preset buttons
   elements.presetBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       const w = parseInt(btn.dataset.width, 10);
+      if (isNaN(w) || w < 280) return;
       updateSizeUI(w);
       saveConfig({ previewWidth: w });
     });
