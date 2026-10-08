@@ -1,15 +1,12 @@
-# Stream Previews v0.6.3 - AMO Release Notes
+# Stream Previews v0.6.4 - AMO Release Notes
 
-What's New in Version 0.6.3:
+What's New in Version 0.6.4:
 
-- Live Stream Titles in Hover Preview:
-  Hover previews now dynamically display the broadcaster's live stream title alongside the channel name across directory cards and followed sidebar channels on both Twitch and Kick.
+- Instant Activation on Install:
+  Converted to Manifest V2 to allow seamless out-of-the-box operation on Twitch and Kick without requiring manual site permission configuration or toolbar activation clicks.
 
-- Platform-Themed Channel Names:
-  Channel names in the preview header now feature subtle platform-specific branding accents: light purple on Twitch and neon green on Kick.
+- Full Permissions Parity:
+  Site permissions are requested and granted at install time, ensuring instant hover previews and multi-pin layouts across Twitch and Kick.
 
-- Seamless Multi-View Decluttering:
-  When pinning streams or tiling them in Dual+ (Play Together) mode, stream titles automatically collapse to keep multi-stream grid layouts minimal and distraction-free.
-
-- Fast Cached API Lookups:
-  Background title resolution for sidebar streams utilizes short-lived caching to deliver instant title updates with minimal network requests.
+- Live Stream Titles & Platform-Themed Headers:
+  Includes dynamic live stream title display, subtle platform-specific branding accents (purple for Twitch, green for Kick), and automatic header decluttering in Dual+ multi-view mode.

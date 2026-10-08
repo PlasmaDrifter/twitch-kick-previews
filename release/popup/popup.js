@@ -3,7 +3,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Refresh toolbar icon in case Firefox cached previous icon in chrome UI
   try {
-    const actionApi = (typeof browser !== "undefined" && browser.action) ? browser.action : (typeof chrome !== "undefined" ? chrome.action : null);
+    const actionApi = (typeof browser !== "undefined" && (browser.browserAction || browser.action))
+      ? (browser.browserAction || browser.action)
+      : (typeof chrome !== "undefined" ? (chrome.browserAction || chrome.action) : null);
     if (actionApi && actionApi.setIcon) {
       actionApi.setIcon({
         path: {
@@ -13,6 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }).catch(() => {});
     }
+  } catch (_) {}
   // Populate version badge dynamically from manifest
   try {
     const runtimeApi = (typeof browser !== "undefined" && browser.runtime) ? browser.runtime : (typeof chrome !== "undefined" && chrome.runtime ? chrome.runtime : null);

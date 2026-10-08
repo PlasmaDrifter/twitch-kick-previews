@@ -1,6 +1,7 @@
-// Background service script for Stream Previews
 (() => {
-  const actionApi = (typeof browser !== "undefined" && browser.action) ? browser.action : (typeof chrome !== "undefined" ? chrome.action : null);
+  const actionApi = (typeof browser !== "undefined" && (browser.browserAction || browser.action)) 
+    ? (browser.browserAction || browser.action) 
+    : (typeof chrome !== "undefined" ? (chrome.browserAction || chrome.action) : null);
   if (actionApi && actionApi.setIcon) {
     actionApi.setIcon({
       path: {
