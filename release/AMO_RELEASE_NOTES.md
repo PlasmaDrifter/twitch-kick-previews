@@ -1,6 +1,6 @@
-# Stream Previews v0.6.2 - AMO Release Notes
+# Stream Previews v0.6.3 - AMO Release Notes
 
-What's New in Version 0.6.2:
+What's New in Version 0.6.3:
 
 - Live Stream Titles in Hover Preview:
   Hover previews now dynamically display the broadcaster's live stream title alongside the channel name across directory cards and followed sidebar channels on both Twitch and Kick.
