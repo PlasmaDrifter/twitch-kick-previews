@@ -13,6 +13,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }).catch(() => {});
     }
+  // Populate version badge dynamically from manifest
+  try {
+    const runtimeApi = (typeof browser !== "undefined" && browser.runtime) ? browser.runtime : (typeof chrome !== "undefined" && chrome.runtime ? chrome.runtime : null);
+    if (runtimeApi && runtimeApi.getManifest) {
+      const manifest = runtimeApi.getManifest();
+      const versionEl = document.querySelector(".version");
+      if (versionEl && manifest.version) {
+        versionEl.textContent = `v${manifest.version}`;
+      }
+    }
   } catch (_) {}
 
   const elements = {
