@@ -990,9 +990,9 @@
     getPageStreamInfo() {
       const host = window.location.hostname;
       let platform = null;
-      if (host.includes("twitch.tv")) {
+      if (host === "twitch.tv" || host.endsWith(".twitch.tv")) {
         platform = "twitch";
-      } else if (host.includes("kick.com")) {
+      } else if (host === "kick.com" || host.endsWith(".kick.com")) {
         platform = "kick";
       }
       if (!platform) return null;

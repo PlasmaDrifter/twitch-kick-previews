@@ -18,7 +18,7 @@
     if (!url) return null;
     try {
       const parsed = new URL(url, window.location.origin);
-      if (!parsed.hostname.includes("kick.com")) return null;
+      if (parsed.hostname !== "kick.com" && !parsed.hostname.endsWith(".kick.com")) return null;
       const parts = parsed.pathname.split("/").filter(Boolean);
       if (parts.length === 1) {
         const channel = parts[0].toLowerCase();

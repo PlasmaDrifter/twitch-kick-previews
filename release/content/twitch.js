@@ -19,7 +19,7 @@
     if (!url) return null;
     try {
       const parsed = new URL(url, window.location.origin);
-      if (!parsed.hostname.includes("twitch.tv")) return null;
+      if (parsed.hostname !== "twitch.tv" && !parsed.hostname.endsWith(".twitch.tv")) return null;
       const parts = parsed.pathname.split("/").filter(Boolean);
       if (parts.length >= 1) {
         const channel = parts[0].toLowerCase();
