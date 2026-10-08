@@ -23,7 +23,7 @@ Unlike legacy or commercial preview extensions, Stream Previews contains zero an
 ### Live Stream Hover Preview
 Hover over any followed channel or browse card to instantly watch a live stream preview while another broadcast continues playing:
 
-![Live Stream Hover Preview](images/live-stream-hover-preview.png)
+![Live Stream Hover Preview](images/live-stream-hover-preview.png?v=0.6.3)
 
 ---
 
