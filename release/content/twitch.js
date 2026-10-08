@@ -40,6 +40,34 @@
     return false;
   }
 
+  // Cache stream titles for 2 minutes to minimize requests
+  const titleCache = new Map();
+
+  async function fetchTwitchStreamTitle(channel) {
+    const cached = titleCache.get(channel);
+    if (cached && (Date.now() - cached.time < 120000)) {
+      return cached.title;
+    }
+
+    try {
+      const res = await fetch("https://gql.twitch.tv/gql", {
+        method: "POST",
+        headers: { "Client-Id": "kimne78kx3ncx6brgo4mv6wki5h1ko" },
+        body: JSON.stringify({
+          query: `query { user(login: "${channel}") { stream { title } } }`
+        })
+      });
+      const data = await res.json();
+      const title = data?.data?.user?.stream?.title || "";
+      if (title) {
+        titleCache.set(channel, { title, time: Date.now() });
+      }
+      return title;
+    } catch (_) {
+      return "";
+    }
+  }
+
   let activeTarget = null;
 
   document.addEventListener("mouseover", (event) => {
@@ -53,7 +81,79 @@
 
     activeTarget = targetLink;
     const rect = targetLink.getBoundingClientRect();
-    window.StreamPreviewCore.requestPreview("twitch", channel, rect);
+
+    // Extract stream title or category
+    let streamTitle = "";
+
+    // 1. Sidebar followed channels (e.g. data-test-selector="followed-channel")
+    const sideCard = targetLink.closest('[data-test-selector="followed-channel"], .side-nav-card, [data-a-target="side-nav-card"]');
+    if (sideCard) {
+      // Direct innerText split: Twitch sidebar has Channel \n Category \n Live \n ViewerCount
+      const lines = (sideCard.innerText || sideCard.textContent || "")
+        .split("\n")
+        .map(s => s.trim())
+        .filter(s => s && !/^(live|\d+(\.\d+)?[kK]?(\s*viewers)?|hype\s+train.*|use\s+the\s+right\s+arrow.*)$/i.test(s));
+
+      const foundLine = lines.find(s => s.toLowerCase() !== channel.toLowerCase());
+      if (foundLine) {
+        streamTitle = foundLine;
+      }
+    }
+
+    // 2. Main browse cards / directory cards
+    if (!streamTitle) {
+      // Direct link attributes
+      const targetTitle = (targetLink.getAttribute("title") || targetLink.getAttribute("aria-label") || "").trim();
+      if (targetTitle && targetTitle.toLowerCase() !== channel.toLowerCase()) {
+        streamTitle = targetTitle;
+      }
+    }
+
+    if (!streamTitle) {
+      let cardContainer = targetLink.closest('article, [data-target="directory-card"], [data-a-target="preview-card"], .tw-tower > div, [data-target="directory-page__card-container"]');
+      if (!cardContainer) {
+        let cur = targetLink.parentElement;
+        for (let i = 0; i < 10 && cur; i++) {
+          if (cur.querySelector('[data-a-target="stream-title"], [data-a-target="preview-card-title-link"], h3')) {
+            cardContainer = cur;
+            break;
+          }
+          cur = cur.parentElement;
+        }
+      }
+
+      if (cardContainer) {
+        const titleElem = cardContainer.querySelector('[data-a-target="stream-title"]');
+        if (titleElem) {
+          streamTitle = (titleElem.getAttribute("title") || titleElem.textContent || "").trim();
+        }
+
+        if (!streamTitle) {
+          const titleLink = cardContainer.querySelector('a[data-a-target="preview-card-title-link"], h3');
+          if (titleLink) {
+            streamTitle = (titleLink.getAttribute("title") || titleLink.textContent || "").trim();
+          }
+        }
+      }
+    }
+
+    // Clean up: If streamTitle is identical to channel name, discard it
+    if (streamTitle) {
+      const normTitle = streamTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const normChannel = channel.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (normTitle === normChannel) {
+        streamTitle = "";
+      }
+    }
+
+    window.StreamPreviewCore.requestPreview("twitch", channel, rect, streamTitle);
+
+    // Fetch real live broadcast title via Twitch public GQL
+    fetchTwitchStreamTitle(channel).then((liveTitle) => {
+      if (liveTitle && liveTitle !== streamTitle) {
+        window.StreamPreviewCore.updateStreamTitle("twitch", channel, liveTitle);
+      }
+    }).catch(() => {});
   }, { passive: true });
 
   document.addEventListener("mouseout", (event) => {

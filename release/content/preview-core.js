@@ -39,6 +39,7 @@
       this.loader = null;
       this.dot = null;
       this.channelNameEl = null;
+      this.streamTitleEl = null;
       this.volumeGroup = null;
       this.audioBtn = null;
       this.volumeSlider = null;
@@ -59,6 +60,7 @@
           <div class="sp-header-left">
             <span class="sp-dot"></span>
             <span class="sp-channel-name"></span>
+            <span class="sp-stream-title"></span>
           </div>
           <div class="sp-header-right">
             <button class="sp-btn sp-btn-together" type="button" title="Play Together (Fill Screen)">
@@ -136,6 +138,7 @@
       this.loader = container.querySelector(".sp-loader");
       this.dot = container.querySelector(".sp-dot");
       this.channelNameEl = container.querySelector(".sp-channel-name");
+      this.streamTitleEl = container.querySelector(".sp-stream-title");
       this.volumeGroup = container.querySelector(".sp-volume-group");
       this.audioBtn = container.querySelector(".sp-btn-audio");
       this.volumeSlider = container.querySelector(".sp-volume-slider");
@@ -566,9 +569,10 @@
       return "about:blank";
     }
 
-    show(platform, channel, x, y, initialMuted = undefined, initialVolume = undefined) {
+    show(platform, channel, x, y, initialMuted = undefined, initialVolume = undefined, streamTitle = "") {
       this.channel = channel;
       this.platform = platform;
+      this.streamTitle = streamTitle || "";
       if (initialMuted !== undefined) {
         this.isMuted = initialMuted;
         this.hasUserAdjustedAudio = true;
@@ -587,7 +591,12 @@
       this.updatePinButtonUI();
 
       this.dot.className = `sp-dot ${platform}`;
+      this.channelNameEl.className = `sp-channel-name ${platform}`;
       this.channelNameEl.textContent = channel;
+      if (this.streamTitleEl) {
+        this.streamTitleEl.textContent = this.streamTitle ? `· ${this.streamTitle}` : "";
+        this.streamTitleEl.title = this.streamTitle || "";
+      }
 
       this.container.style.left = `${x}px`;
       this.container.style.top = `${y}px`;
@@ -597,6 +606,14 @@
 
       this.container.classList.add("sp-visible");
       this.core.bringToFront(this);
+    }
+
+    updateStreamTitle(title) {
+      this.streamTitle = title || "";
+      if (this.streamTitleEl) {
+        this.streamTitleEl.textContent = this.streamTitle ? `· ${this.streamTitle}` : "";
+        this.streamTitleEl.title = this.streamTitle || "";
+      }
     }
 
     destroy() {
@@ -1302,7 +1319,7 @@
       return { x, y };
     }
 
-    requestPreview(platform, channel, targetRect) {
+    requestPreview(platform, channel, targetRect, streamTitle = "") {
       if (!this.config[`enabled${platform === "twitch" ? "Twitch" : "Kick"}`]) return;
 
       for (const win of this.pinnedWindows) {
@@ -1317,16 +1334,36 @@
         return;
       }
 
+      this.pendingPreview = { platform, channel, targetRect, streamTitle };
+
       this.clearEnterTimer();
       this.enterTimer = setTimeout(() => {
-        this.showHoverPreview(platform, channel, targetRect);
+        const title = (this.pendingPreview && this.pendingPreview.channel === channel)
+          ? this.pendingPreview.streamTitle
+          : streamTitle;
+        this.showHoverPreview(platform, channel, targetRect, title);
+        this.pendingPreview = null;
       }, this.config.hoverDelayMs);
     }
 
-    showHoverPreview(platform, channel, targetRect) {
+    showHoverPreview(platform, channel, targetRect, streamTitle = "") {
       const win = this.ensureHoverWindow();
       const { x, y } = this.calculatePosition(targetRect);
-      win.show(platform, channel, x, y);
+      win.show(platform, channel, x, y, undefined, undefined, streamTitle);
+    }
+
+    updateStreamTitle(platform, channel, streamTitle) {
+      if (this.pendingPreview && this.pendingPreview.channel === channel && this.pendingPreview.platform === platform) {
+        this.pendingPreview.streamTitle = streamTitle;
+      }
+      if (this.hoverWindow && this.hoverWindow.channel === channel && this.hoverWindow.platform === platform) {
+        this.hoverWindow.updateStreamTitle(streamTitle);
+      }
+      for (const win of this.pinnedWindows) {
+        if (win.channel === channel && win.platform === platform) {
+          win.updateStreamTitle(streamTitle);
+        }
+      }
     }
 
     scheduleHide() {

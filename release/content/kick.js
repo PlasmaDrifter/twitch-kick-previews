@@ -38,6 +38,28 @@
     return false;
   }
 
+  // Cache Kick stream titles for 2 minutes
+  const kickTitleCache = new Map();
+
+  async function fetchKickStreamTitle(channel) {
+    const cached = kickTitleCache.get(channel);
+    if (cached && (Date.now() - cached.time < 120000)) {
+      return cached.title;
+    }
+
+    try {
+      const res = await fetch(`https://kick.com/api/v2/channels/${channel}`);
+      const data = await res.json();
+      const title = data?.livestream?.session_title || "";
+      if (title) {
+        kickTitleCache.set(channel, { title, time: Date.now() });
+      }
+      return title;
+    } catch (_) {
+      return "";
+    }
+  }
+
   let activeTarget = null;
 
   document.addEventListener("mouseover", (event) => {
@@ -58,7 +80,58 @@
 
     activeTarget = targetLink;
     const rect = (inCard || targetLink).getBoundingClientRect();
-    window.StreamPreviewCore.requestPreview("kick", channel, rect);
+
+    // Extract stream title if available on Kick card or sidebar
+    let streamTitle = "";
+    if (inCard) {
+      // 1. Kick exact livestream title attribute: data-testid="livestream-title"
+      const liveTitleEl = inCard.querySelector('[data-testid="livestream-title"]');
+      if (liveTitleEl) {
+        streamTitle = (liveTitleEl.getAttribute("title") || liveTitleEl.textContent || "").trim();
+      }
+
+      // 2. Fallbacks for directory cards
+      if (!streamTitle) {
+        const titleEl = inCard.querySelector(
+          "span[title]:not([class*='viewer']):not([class*='badge']), a[title]:not([href*='/video']):not([href*='/category']):not([href*='/profile']), h3, h4"
+        );
+        if (titleEl) {
+          const candidate = (titleEl.getAttribute("title") || titleEl.textContent || "").trim();
+          if (candidate && !/^\d+([,\.]\d+)?[kK]?(\s*viewers?)?$/i.test(candidate)) {
+            streamTitle = candidate;
+          }
+        }
+      }
+    }
+
+    if (!streamTitle) {
+      const linkTitle = (targetLink.getAttribute("title") || targetLink.getAttribute("aria-label") || "").trim();
+      if (linkTitle && !/^\d+([,\.]\d+)?[kK]?(\s*viewers?)?$/i.test(linkTitle)) {
+        streamTitle = linkTitle;
+      }
+    }
+
+    // Clean up: filter out numeric viewer counts or channel name duplicates
+    if (streamTitle) {
+      if (/^\d+([,\.]\d+)?[kK]?(\s*viewers?)?$/i.test(streamTitle)) {
+        streamTitle = "";
+      } else {
+        const normTitle = streamTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const normChannel = channel.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (normTitle === normChannel) {
+          streamTitle = "";
+        }
+      }
+    }
+
+    window.StreamPreviewCore.requestPreview("kick", channel, rect, streamTitle);
+
+    // Fetch real live broadcast title via Kick public channel API
+    fetchKickStreamTitle(channel).then((liveTitle) => {
+      if (liveTitle && liveTitle !== streamTitle) {
+        window.StreamPreviewCore.updateStreamTitle("kick", channel, liveTitle);
+      }
+    }).catch(() => {});
   }, { passive: true });
 
   document.addEventListener("mouseout", (event) => {
