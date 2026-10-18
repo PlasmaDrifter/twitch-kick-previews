@@ -72,7 +72,13 @@
     if (!channel) return;
 
     // Verify it is inside a stream card or sidebar
-    const inCard = targetLink.closest(".group\\/card, #sidebar-wrapper, [class*='stream'], [class*='card']");
+    const inSidebar = targetLink.closest("#sidebar-wrapper, [data-testid^='sidebar-'], aside, #sidebar");
+    const isSidebarOnly = !!(window.StreamPreviewCore && window.StreamPreviewCore.config && window.StreamPreviewCore.config.sidebarOnly);
+    if (isSidebarOnly && !inSidebar) {
+      return;
+    }
+
+    const inCard = inSidebar || targetLink.closest(".group\\/card, [class*='stream'], [class*='card']");
     if (!inCard && !targetLink.querySelector("img, video")) {
       // If it's a naked text link in comments or footer, don't trigger unless hover over thumbnail/card
       return;

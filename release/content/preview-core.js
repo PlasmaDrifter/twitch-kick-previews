@@ -722,6 +722,7 @@
         defaultVolume: 0.8,
         previewQualityMode: "fast",
         showStatsBadge: true,
+        sidebarOnly: true,
         tiledBorderEnabled: true,
         tiledBorderMode: "distinct",
         tiledBorderCustomColor: "#9146ff"

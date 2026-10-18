@@ -1,18 +1,18 @@
-# Stream Previews v0.6.6 - AMO Release Notes
+# Stream Previews v0.6.7 - AMO Release Notes
 
-What's New in Version 0.6.6:
+What's New in Version 0.6.7:
 
-- Stream Quality & Bandwidth Presets:
-  Introduced selectable stream quality presets in the popup settings (Lite 480p, Dynamic, and Auto) to optimize preview loading, reduce bandwidth, and lower memory consumption.
+- Sidebar Only Hover Previews:
+  Added a dedicated toggle in settings ("Sidebar only (disable page previews)"), enabled by default, restricting live hover previews strictly to followed channels in the left sidebar on both Twitch and Kick.
 
-- Security Hardening & Input Sanitization:
-  Hardened player frame injection by replacing dynamic script string evaluation with static execution and dataset attributes, adding strict alphanumeric input sanitization to ensure complete CodeQL and Mozilla security compliance.
+- Cleaner Browsing Experience:
+  Eliminates accidental hover popups when navigating stream cards, category listings, and search results on Twitch and Kick, keeping directory browsing fast and clean.
 
-- Early Quality Locking & Smooth Playback:
-  Resolved video stalling and mid-stream resolution switching (e.g. 480p jumping to 720p and back) by locking target quality upfront before adaptive bitrate changes, preventing buffer flushes and video stutter.
+- Configurable Trigger Scope:
+  Users who prefer hover previews across browse grids and category pages can re-enable page card previews anytime with a single click in popup settings.
 
-- Header Quality & Latency Badge Toggle:
-  Added live stream resolution and load latency stats badge to preview headers (e.g. "480p · 0.45s") with a dedicated toggle in popup settings ("Show quality & speed badge in header") to customize header density.
+- Instant Setting Persistence:
+  Scope preferences persist across browser sessions and synchronize dynamically with open tabs without requiring page refreshes.
 
-- Autoplay & Startup Reliability:
-  Improved media player initialization and audio handling so muted previews start playback immediately without stalling or freezing.
+- Optimized DOM Hit-Testing:
+  Streamlined selector checks and bounding-box measurements for sidebar channels on both Twitch and Kick for enhanced hover responsiveness.

@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     qualityButtons: document.querySelectorAll(".quality-btn"),
     qualityModeDisplay: document.getElementById("qualityModeDisplay"),
     showStatsBadge: document.getElementById("showStatsBadge"),
+    sidebarOnly: document.getElementById("sidebarOnly"),
     enabledTwitch: document.getElementById("enabledTwitch"),
     enabledKick: document.getElementById("enabledKick"),
     tiledBorderEnabled: document.getElementById("tiledBorderEnabled"),
@@ -99,6 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     hoverDelayMs: 300,
     previewQualityMode: "fast",
     showStatsBadge: true,
+    sidebarOnly: true,
     enabledTwitch: true,
     enabledKick: true,
     tiledBorderEnabled: true,
@@ -241,6 +243,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (elements.showStatsBadge) {
     elements.showStatsBadge.checked = config.showStatsBadge !== false;
   }
+  if (elements.sidebarOnly) {
+    elements.sidebarOnly.checked = config.sidebarOnly !== false;
+  }
   elements.enabledTwitch.checked = config.enabledTwitch;
   elements.enabledKick.checked = config.enabledKick;
 
@@ -360,6 +365,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (elements.showStatsBadge) {
     elements.showStatsBadge.addEventListener("change", (e) => {
       saveConfig({ showStatsBadge: e.target.checked });
+    });
+  }
+
+  // Sidebar only toggle
+  if (elements.sidebarOnly) {
+    elements.sidebarOnly.addEventListener("change", (e) => {
+      saveConfig({ sidebarOnly: e.target.checked });
     });
   }
 

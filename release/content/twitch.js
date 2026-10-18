@@ -82,7 +82,13 @@
     activeTarget = targetLink;
 
     // Resolve card or sidebar container
-    const sideCard = targetLink.closest('[data-test-selector="followed-channel"], .side-nav-card, [data-a-target="side-nav-card"]');
+    const sideCard = targetLink.closest('[data-test-selector="followed-channel"], .side-nav-card, [data-a-target="side-nav-card"], [data-test-selector="side-nav"], nav[aria-label*="Followed"], #side-nav, .side-nav');
+
+    const isSidebarOnly = !!(window.StreamPreviewCore && window.StreamPreviewCore.config && window.StreamPreviewCore.config.sidebarOnly);
+    if (isSidebarOnly && !sideCard) {
+      return;
+    }
+
     let cardContainer = null;
     if (!sideCard) {
       cardContainer = targetLink.closest('article, [data-target="directory-card"], [data-a-target="preview-card"], .tw-tower > div, [data-target="directory-page__card-container"]');
