@@ -690,6 +690,9 @@
 
       this.container.classList.add("sp-visible");
       this.core.bringToFront(this);
+      if (!this.isPinned) {
+        this.core.updateHoverBorder();
+      }
     }
 
     updateStreamTitle(title) {
@@ -723,6 +726,7 @@
         previewQualityMode: "fast",
         showStatsBadge: true,
         sidebarOnly: true,
+        hoverBorderEnabled: true,
         tiledBorderEnabled: true,
         tiledBorderMode: "distinct",
         tiledBorderCustomColor: "#9146ff"
@@ -734,6 +738,7 @@
       this.isTiled = false;
       this.topZIndex = 2147483640;
       this.savedHostVideoState = null;
+      this.tiledBackdrop = null;
 
       this.enterTimer = null;
       this.leaveTimer = null;
@@ -784,7 +789,8 @@
               }
             }
           }
-          if (changes.tiledBorderEnabled || changes.tiledBorderMode || changes.tiledBorderCustomColor) {
+          if (changes.hoverBorderEnabled || changes.tiledBorderEnabled || changes.tiledBorderMode || changes.tiledBorderCustomColor) {
+            this.updateHoverBorder();
             if (this.isTiled) {
               this.updateTiledLayout();
             } else {
@@ -917,7 +923,24 @@
 
     bringToFront(win) {
       if (!win || !win.container) return;
+      if (!win.isPinned) {
+        win.container.style.zIndex = "2147483647";
+        this.activeWindow = win;
+        return;
+      }
       this.topZIndex++;
+      if (this.topZIndex >= 2147483646) {
+        const sorted = Array.from(this.pinnedWindows).sort((a, b) => {
+          const zA = parseInt(a.container.style.zIndex, 10) || 2147483640;
+          const zB = parseInt(b.container.style.zIndex, 10) || 2147483640;
+          return zA - zB;
+        });
+        let base = 2147483640;
+        sorted.forEach((w) => {
+          w.container.style.zIndex = base++;
+        });
+        this.topZIndex = base;
+      }
       win.container.style.zIndex = this.topZIndex;
       this.activeWindow = win;
     }
@@ -1250,12 +1273,14 @@
       }
     }
 
-    getBorderColor(index = 0) {
+    getBorderColor(index = 0, platform = null) {
       const borderMode = this.config.tiledBorderMode || "distinct";
       const customColor = this.config.tiledBorderCustomColor || "#9146ff";
       const DISTINCT_COLORS = ["#9146ff", "#22c55e", "#00e5ff", "#ff7538"];
 
       if (borderMode === "distinct") {
+        if (platform === "kick") return "#22c55e";
+        if (platform === "twitch") return "#9146ff";
         return DISTINCT_COLORS[index % DISTINCT_COLORS.length];
       } else if (borderMode === "custom") {
         return customColor;
@@ -1270,6 +1295,23 @@
       }
     }
 
+    updateHoverBorder() {
+      if (!this.hoverWindow || !this.hoverWindow.container) return;
+      if (this.hoverWindow.isPinned) return;
+
+      const enabled = this.config.hoverBorderEnabled !== false;
+      if (enabled) {
+        const color = this.getBorderColor(0, this.hoverWindow.platform);
+        this.hoverWindow.container.style.setProperty("--sp-hover-border", color);
+        this.hoverWindow.container.style.border = `2px solid ${color}`;
+        this.hoverWindow.container.style.boxShadow = "0 16px 40px rgba(0, 0, 0, 0.85)";
+      } else {
+        this.hoverWindow.container.style.removeProperty("--sp-hover-border");
+        this.hoverWindow.container.style.border = "1px solid rgba(255, 255, 255, 0.15)";
+        this.hoverWindow.container.style.boxShadow = "0 16px 40px rgba(0, 0, 0, 0.85)";
+      }
+    }
+
     updatePinnedBorders() {
       const pinned = Array.from(this.pinnedWindows);
       const borderEnabled = this.config.tiledBorderEnabled !== false;
@@ -1280,19 +1322,37 @@
         if (this.isTiled) continue;
 
         if (borderEnabled) {
-          const color = this.getBorderColor(i);
+          const color = this.getBorderColor(i, win.platform);
           win.container.style.setProperty("--sp-pinned-border", color);
-          win.container.style.boxShadow = `0 20px 48px rgba(0, 0, 0, 0.9), 0 0 0 2px ${color}`;
+          win.container.style.border = `2px solid ${color}`;
+          win.container.style.boxShadow = "0 16px 40px rgba(0, 0, 0, 0.85)";
           if (win.pinBtn && win.isPinned) {
             win.pinBtn.style.color = color;
           }
         } else {
           win.container.style.removeProperty("--sp-pinned-border");
-          win.container.style.boxShadow = "0 20px 48px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.15)";
+          win.container.style.border = "1px solid rgba(255, 255, 255, 0.15)";
+          win.container.style.boxShadow = "0 16px 40px rgba(0, 0, 0, 0.85)";
           if (win.pinBtn && win.isPinned) {
             win.pinBtn.style.color = "";
           }
         }
+      }
+    }
+
+    ensureTiledBackdrop() {
+      if (!this.tiledBackdrop) {
+        const bd = document.createElement("div");
+        bd.className = "sp-tiled-backdrop";
+        document.body.appendChild(bd);
+        this.tiledBackdrop = bd;
+      }
+      this.tiledBackdrop.style.display = "block";
+    }
+
+    removeTiledBackdrop() {
+      if (this.tiledBackdrop) {
+        this.tiledBackdrop.style.display = "none";
       }
     }
 
@@ -1301,10 +1361,13 @@
 
       if (!this.isTiled || pinned.length < 2) {
         this.closeAllSlotPickers();
+        this.removeTiledBackdrop();
         for (const win of pinned) {
           win.container.classList.remove("sp-tiled", "sp-no-gap");
           win.container.style.height = "";
           win.container.style.boxShadow = "";
+          win.container.style.border = "";
+          win.container.style.borderRadius = "";
           if (win.savedFloatingRect) {
             win.container.style.left = win.savedFloatingRect.left;
             win.container.style.top = win.savedFloatingRect.top;
@@ -1318,21 +1381,21 @@
         return;
       }
 
+      this.ensureTiledBackdrop();
+
       const count = Math.min(4, pinned.length);
       const W = window.innerWidth;
       const H = window.innerHeight;
 
       const borderEnabled = this.config.tiledBorderEnabled !== false;
 
-      const gap = borderEnabled ? 4 : 0;
-      const halfW = borderEnabled ? Math.floor((W - (gap * 3)) / 2) : Math.floor(W / 2);
-      const fullH = borderEnabled ? Math.floor(H - (gap * 2)) : H;
-      const halfH = borderEnabled ? Math.floor((H - (gap * 3)) / 2) : Math.floor(H / 2);
+      const halfW = Math.floor(W / 2);
+      const halfH = Math.floor(H / 2);
 
       const wCol0 = halfW;
-      const wCol1 = borderEnabled ? halfW : (W - halfW);
+      const wCol1 = W - halfW;
       const hRow0 = halfH;
-      const hRow1 = borderEnabled ? halfH : (H - halfH);
+      const hRow1 = H - halfH;
 
       for (let i = 0; i < pinned.length; i++) {
         const win = pinned[i];
@@ -1351,22 +1414,26 @@
 
         let borderColor = "";
         if (borderEnabled) {
-          borderColor = this.getBorderColor(i);
+          borderColor = this.getBorderColor(i, win.platform);
         }
 
         if (borderColor) {
           win.container.style.setProperty("--sp-pinned-border", borderColor);
-          win.container.style.boxShadow = `0 0 0 2px ${borderColor}, 0 8px 30px rgba(0, 0, 0, 0.9)`;
+          win.container.style.border = `2px solid ${borderColor}`;
+          win.container.style.boxShadow = "none";
           if (win.pinBtn && win.isPinned) {
             win.pinBtn.style.color = borderColor;
           }
         } else {
           win.container.style.removeProperty("--sp-pinned-border");
+          win.container.style.border = "none";
           win.container.style.boxShadow = "none";
           if (win.pinBtn && win.isPinned) {
             win.pinBtn.style.color = "";
           }
         }
+
+        win.container.style.borderRadius = "0";
 
         if (win.swapBtn) {
           win.swapBtn.classList.remove("sp-swap-h", "sp-swap-v", "sp-swap-promote", "sp-swap-cycle", "sp-swap-grid");
@@ -1390,37 +1457,37 @@
         let left = 0, top = 0, w = halfW, h = halfH;
 
         if (count === 2) {
-          top = gap;
-          h = fullH;
+          top = 0;
+          h = H;
           if (i === 0) {
-            left = gap;
+            left = 0;
             w = wCol0;
           } else {
-            left = borderEnabled ? (gap + halfW + gap) : wCol0;
+            left = wCol0;
             w = wCol1;
           }
         } else if (count === 3) {
           if (i === 0) {
-            left = gap;
-            top = gap;
+            left = 0;
+            top = 0;
             w = wCol0;
-            h = fullH;
+            h = H;
           } else if (i === 1) {
-            left = borderEnabled ? (gap + halfW + gap) : wCol0;
-            top = gap;
+            left = wCol0;
+            top = 0;
             w = wCol1;
             h = hRow0;
           } else {
-            left = borderEnabled ? (gap + halfW + gap) : wCol0;
-            top = borderEnabled ? (gap + halfH + gap) : hRow0;
+            left = wCol0;
+            top = hRow0;
             w = wCol1;
             h = hRow1;
           }
         } else {
           const col = i % 2;
           const row = Math.floor(i / 2);
-          left = col === 0 ? gap : (borderEnabled ? (gap + halfW + gap) : wCol0);
-          top = row === 0 ? gap : (borderEnabled ? (gap + halfH + gap) : hRow0);
+          left = col === 0 ? 0 : wCol0;
+          top = row === 0 ? 0 : hRow0;
           w = col === 0 ? wCol0 : wCol1;
           h = row === 0 ? hRow0 : hRow1;
         }
@@ -1517,6 +1584,7 @@
       const win = this.ensureHoverWindow();
       const { x, y } = this.calculatePosition(targetRect);
       win.show(platform, channel, x, y, undefined, undefined, streamTitle);
+      this.updateHoverBorder();
     }
 
     updateStreamTitle(platform, channel, streamTitle) {

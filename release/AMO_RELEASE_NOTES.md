@@ -1,18 +1,24 @@
-# Stream Previews v0.6.7 - AMO Release Notes
+# Stream Previews v0.7.0 - AMO Release Notes
 
-What's New in Version 0.6.7:
+What's New in Version 0.7.0:
 
-- Sidebar Only Hover Previews:
-  Added a dedicated toggle in settings ("Sidebar only (disable page previews)"), enabled by default, restricting live hover previews strictly to followed channels in the left sidebar on both Twitch and Kick.
+- Hover Preview Layering Over Pinned Streams:
+  Hover preview overlays now consistently render above existing pinned stream popups. When hovering over another channel in the sidebar or browse page, the hover window always takes top z-index priority above any pinned windows.
 
-- Cleaner Browsing Experience:
-  Eliminates accidental hover popups when navigating stream cards, category listings, and search results on Twitch and Kick, keeping directory browsing fast and clean.
+- Compact Segmented Settings Interface:
+  Redesigned the settings popup into a streamlined 3-tab segmented layout (General, Borders, Audio). Reduces the popup vertical height footprint by approximately 50% (down to ~290px–310px) to completely eliminate scrolling in standard views while preserving all settings, sliders, and controls.
 
-- Configurable Trigger Scope:
-  Users who prefer hover previews across browse grids and category pages can re-enable page card previews anytime with a single click in popup settings.
+- Distinct Tab Navigation:
+  Features an inset navigation track with elevated pill cards and smooth state transitions, making the active section immediately recognizable. Automatically saves and restores the last viewed tab across sessions.
 
-- Instant Setting Persistence:
-  Scope preferences persist across browser sessions and synchronize dynamically with open tabs without requiring page refreshes.
+- Hover Preview Border Control:
+  Added an independent toggle to configure borders specifically on hover preview windows in addition to the Play Together tiling borders.
 
-- Optimized DOM Hit-Testing:
-  Streamlined selector checks and bounding-box measurements for sidebar channels on both Twitch and Kick for enhanced hover responsiveness.
+- Solid Bottom Window Borders:
+  Fixed an issue where downward drop shadows dimmed the bottom edge of hover and pinned popups. All four borders (top, bottom, left, right) now render with 100% solid, crisp color.
+
+- Seamless Fullscreen Tiling:
+  Eliminated the bottom seam during Play Together multi-view mode where the underlying webpage could previously be seen. Stream windows now tile flush to the bottom edge with a dedicated black fullscreen backdrop.
+
+- Refined Settings Organization:
+  Relocated the "Show quality & speed badge in header" option into the General tab alongside trigger scope and platform controls for intuitive discovery.

@@ -13,185 +13,210 @@
         <img class="logo-icon" src="../icons/icon-32.png" alt="Logo">
         <h1>Stream Previews</h1>
       </div>
-      <span class="version">v0.6.7</span>
+      <span class="version">v0.7.0</span>
     </header>
 
+    <div class="tab-nav-wrapper">
+      <nav class="tab-nav">
+        <button type="button" class="tab-btn active" data-tab="general">General</button>
+        <button type="button" class="tab-btn" data-tab="borders">Borders</button>
+        <button type="button" class="tab-btn" data-tab="audio">Audio</button>
+      </nav>
+    </div>
+
     <main class="content">
-      <!-- Preview Size -->
-      <section class="section">
-        <label class="section-title">
-          <span>Preview Window Size</span>
-          <span id="sizeDisplay" class="value-badge">480 &times; 270 px</span>
-        </label>
-        
-        <div class="preset-buttons">
-          <button type="button" class="preset-btn" data-width="360">360p</button>
-          <button type="button" class="preset-btn active" data-width="480">480p</button>
-          <button type="button" class="preset-btn" data-width="640">640p</button>
-          <button type="button" class="preset-btn" data-width="800">800p</button>
-        </div>
+      <!-- Tab 1: General (Size, Quality, Delay, Scope, Platforms) -->
+      <div class="tab-pane active" id="tab-general">
+        <!-- Preview Size -->
+        <section class="section">
+          <label class="section-title">
+            <span>Preview Window Size</span>
+            <span id="sizeDisplay" class="value-badge">480 &times; 270 px</span>
+          </label>
+          <div class="preset-buttons">
+            <button type="button" class="preset-btn" data-width="360">360p</button>
+            <button type="button" class="preset-btn active" data-width="480">480p</button>
+            <button type="button" class="preset-btn" data-width="640">640p</button>
+            <button type="button" class="preset-btn" data-width="800">800p</button>
+          </div>
+          <div class="slider-wrapper">
+            <input type="range" id="sizeSlider" min="280" max="960" step="5" value="480">
+          </div>
+        </section>
 
-        <div class="slider-wrapper">
-          <input type="range" id="sizeSlider" min="280" max="960" step="5" value="480">
-        </div>
-      </section>
+        <!-- Stream Quality -->
+        <section class="section">
+          <label class="section-title">
+            <span>Stream Quality</span>
+            <span id="qualityModeDisplay" class="value-badge">Lite (480p)</span>
+          </label>
+          <div class="preset-buttons quality-buttons">
+            <button type="button" class="quality-btn active" data-mode="fast" title="480p bandwidth saver: ideal for slower connections or multiple pinned streams. Upgrades to Source when pinned.">Lite (480p)</button>
+            <button type="button" class="quality-btn" data-mode="dynamic" title="Starts at 480p, automatically steps up to Source after 3s">Dynamic</button>
+            <button type="button" class="quality-btn" data-mode="auto" title="Standard platform adaptive bitrate">Auto</button>
+          </div>
+        </section>
 
-      <!-- Stream Quality -->
-      <section class="section">
-        <label class="section-title">
-          <span>Stream Quality</span>
-          <span id="qualityModeDisplay" class="value-badge">Lite (480p)</span>
-        </label>
-        
-        <div class="preset-buttons quality-buttons">
-          <button type="button" class="quality-btn active" data-mode="fast" title="480p bandwidth saver: ideal for slower connections or multiple pinned streams. Upgrades to Source when pinned.">Lite (480p)</button>
-          <button type="button" class="quality-btn" data-mode="dynamic" title="Starts at 480p, automatically steps up to Source after 3s">Dynamic</button>
-          <button type="button" class="quality-btn" data-mode="auto" title="Standard platform adaptive bitrate">Auto</button>
-        </div>
-
-        <label class="toggle-row quality-stats-toggle">
-          <span class="toggle-label">Show quality & speed badge in header</span>
-          <input type="checkbox" id="showStatsBadge" checked>
-          <span class="switch"></span>
-        </label>
-      </section>
-
-      <!-- Audio Options -->
-      <section class="section">
-        <span class="section-title">Audio & Sound</span>
-        
-        <label class="toggle-row">
-          <span class="toggle-label">Mute previews by default</span>
-          <input type="checkbox" id="defaultMuted" checked>
-          <span class="switch"></span>
-        </label>
-
-        <div class="slider-group" id="volumeGroup">
-          <label class="slider-title">
-            <span>Volume</span>
-            <span id="volumeDisplay" class="value-badge">80%</span>
+        <!-- Hover Delay -->
+        <section class="section">
+          <label class="section-title">
+            <span>Hover Trigger Delay</span>
+            <span id="delayDisplay" class="value-badge">300 ms</span>
           </label>
           <div class="slider-wrapper">
-            <input type="range" id="volumeSlider" min="0" max="100" step="1" value="80">
+            <input type="range" id="delaySlider" min="100" max="1000" step="10" value="300">
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Dual+ Multi-View Borders -->
-      <section class="section">
-        <label class="section-title">
-          <span>Stream Window Borders</span>
-          <span id="borderModeDisplay" class="value-badge">Distinct</span>
-        </label>
+        <!-- Trigger Scope -->
+        <section class="section">
+          <label class="toggle-row">
+            <span class="toggle-label">Sidebar only (disable page previews)</span>
+            <input type="checkbox" id="sidebarOnly" checked>
+            <span class="switch"></span>
+          </label>
+        </section>
 
-        <label class="toggle-row">
-          <span class="toggle-label">Enable borders in Play Together</span>
-          <input type="checkbox" id="tiledBorderEnabled" checked>
-          <span class="switch"></span>
-        </label>
+        <!-- Header Display -->
+        <section class="section">
+          <label class="toggle-row">
+            <span class="toggle-label">Show quality & speed badge in header</span>
+            <input type="checkbox" id="showStatsBadge" checked>
+            <span class="switch"></span>
+          </label>
+        </section>
 
-        <div class="color-options-row" id="tiledBorderOptions">
-          <button type="button" class="swatch-btn active" data-mode="distinct" title="Distinct (Multi-color per stream)">
-            <span class="swatch-preview swatch-distinct"></span>
-          </button>
-          <button type="button" class="swatch-btn" data-mode="purple" data-color="#9146ff" title="Twitch Purple">
-            <span class="swatch-preview" style="background-color: #9146ff;"></span>
-          </button>
-          <button type="button" class="swatch-btn" data-mode="green" data-color="#22c55e" title="Kick Green">
-            <span class="swatch-preview" style="background-color: #22c55e;"></span>
-          </button>
-          <button type="button" class="swatch-btn" data-mode="cyan" data-color="#00e5ff" title="Electric Cyan">
-            <span class="swatch-preview" style="background-color: #00e5ff;"></span>
-          </button>
-          <button type="button" class="swatch-btn" data-mode="orange" data-color="#ff7538" title="Neon Orange">
-            <span class="swatch-preview" style="background-color: #ff7538;"></span>
-          </button>
-          <button type="button" class="swatch-btn swatch-custom-btn" id="customColorBtn" data-mode="custom" title="Custom Color Picker">
-            <span class="swatch-preview swatch-custom-indicator" id="customColorIndicator" style="background-color: #9146ff;">
-              <svg class="swatch-pipette-icon" viewBox="0 0 24 24" width="12" height="12">
-                <path d="M20.71 5.63l-2.34-2.34a1 1 0 0 0-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.92-1.92 3.12-3.12a1 1 0 0 0 .01-1.42zM6.92 19H5v-1.92l8.06-8.06 1.92 1.92L6.92 19z"/>
-              </svg>
-            </span>
-          </button>
-        </div>
+        <!-- Platforms -->
+        <section class="section">
+          <span class="section-title">Active Platforms</span>
+          <div class="platforms-grid">
+            <label class="toggle-row platform-row">
+              <span class="toggle-label platform-label twitch">
+                <span class="dot twitch-dot"></span> Twitch
+              </span>
+              <input type="checkbox" id="enabledTwitch" checked>
+              <span class="switch"></span>
+            </label>
 
-        <!-- In-Popup Custom Color Picker Panel -->
-        <div class="custom-color-panel hidden" id="customColorPanel">
-          <div class="custom-chips-row">
-            <button type="button" class="color-chip" data-color="#ef4444" style="background-color: #ef4444;" title="Red"></button>
-            <button type="button" class="color-chip" data-color="#f97316" style="background-color: #f97316;" title="Orange"></button>
-            <button type="button" class="color-chip" data-color="#eab308" style="background-color: #eab308;" title="Yellow"></button>
-            <button type="button" class="color-chip" data-color="#84cc16" style="background-color: #84cc16;" title="Lime"></button>
-            <button type="button" class="color-chip" data-color="#22c55e" style="background-color: #22c55e;" title="Green"></button>
-            <button type="button" class="color-chip" data-color="#06b6d4" style="background-color: #06b6d4;" title="Cyan"></button>
-            <button type="button" class="color-chip" data-color="#3b82f6" style="background-color: #3b82f6;" title="Blue"></button>
-            <button type="button" class="color-chip" data-color="#9146ff" style="background-color: #9146ff;" title="Purple"></button>
-            <button type="button" class="color-chip" data-color="#ec4899" style="background-color: #ec4899;" title="Pink"></button>
-            <button type="button" class="color-chip" data-color="#ffffff" style="background-color: #ffffff;" title="White"></button>
+            <label class="toggle-row platform-row">
+              <span class="toggle-label platform-label kick">
+                <span class="dot kick-dot"></span> Kick
+              </span>
+              <input type="checkbox" id="enabledKick" checked>
+              <span class="switch"></span>
+            </label>
           </div>
-          <div class="picker-bottom-row">
-            <span class="custom-preview-dot" id="pickerPreviewDot" title="Current shade preview"></span>
-            <div class="shade-slider-track">
-              <input type="range" id="customShadeSlider" min="0" max="100" value="50" class="shade-slider" title="Drag left for darker shades, right for lighter shades">
-            </div>
-            <div class="custom-hex-box">
-              <span class="custom-hex-prefix">#</span>
-              <input type="text" id="customHexInput" class="custom-hex-input" maxlength="6" placeholder="9146FF" spellcheck="false" title="Hex code">
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      <!-- Hover Delay -->
-      <section class="section">
-        <label class="section-title">
-          <span>Hover Trigger Delay</span>
-          <span id="delayDisplay" class="value-badge">300 ms</span>
-        </label>
-        <div class="slider-wrapper">
-          <input type="range" id="delaySlider" min="100" max="1000" step="10" value="300">
-        </div>
-      </section>
+      <!-- Tab 2: Borders (Hover border, Play Together, Swatches, Custom Color Picker) -->
+      <div class="tab-pane" id="tab-borders">
+        <section class="section">
+          <label class="section-title">
+            <span>Stream Window Borders</span>
+            <span id="borderModeDisplay" class="value-badge">Distinct</span>
+          </label>
 
-      <!-- Trigger Scope -->
-      <section class="section">
-        <label class="toggle-row">
-          <span class="toggle-label">Sidebar only (disable page previews)</span>
-          <input type="checkbox" id="sidebarOnly" checked>
-          <span class="switch"></span>
-        </label>
-      </section>
-
-      <!-- Platforms -->
-      <section class="section">
-        <span class="section-title">Active Platforms</span>
-        <div class="platforms-grid">
-          <label class="toggle-row platform-row">
-            <span class="toggle-label platform-label twitch">
-              <span class="dot twitch-dot"></span> Twitch
-            </span>
-            <input type="checkbox" id="enabledTwitch" checked>
+          <label class="toggle-row">
+            <span class="toggle-label">Enable border on hover preview</span>
+            <input type="checkbox" id="hoverBorderEnabled" checked>
             <span class="switch"></span>
           </label>
 
-          <label class="toggle-row platform-row">
-            <span class="toggle-label platform-label kick">
-              <span class="dot kick-dot"></span> Kick
-            </span>
-            <input type="checkbox" id="enabledKick" checked>
+          <label class="toggle-row">
+            <span class="toggle-label">Enable borders in Play Together</span>
+            <input type="checkbox" id="tiledBorderEnabled" checked>
             <span class="switch"></span>
           </label>
-        </div>
-      </section>
 
-      <!-- Shortcuts Guide -->
-      <footer class="shortcuts-footer">
-        <div class="shortcut-item"><kbd>M</kbd> <span>Sound</span></div>
-        <div class="shortcut-item"><kbd>T</kbd> <span>Together</span></div>
-        <div class="shortcut-item"><kbd>P</kbd> <span>Pin</span></div>
-        <div class="shortcut-item"><kbd>S</kbd> <span>Swap</span></div>
-        <div class="shortcut-item"><kbd>Esc</kbd> <span>Close</span></div>
-      </footer>
+          <div class="color-options-row" id="tiledBorderOptions">
+            <button type="button" class="swatch-btn active" data-mode="distinct" title="Distinct (Multi-color per stream)">
+              <span class="swatch-preview swatch-distinct"></span>
+            </button>
+            <button type="button" class="swatch-btn" data-mode="purple" data-color="#9146ff" title="Twitch Purple">
+              <span class="swatch-preview" style="background-color: #9146ff;"></span>
+            </button>
+            <button type="button" class="swatch-btn" data-mode="green" data-color="#22c55e" title="Kick Green">
+              <span class="swatch-preview" style="background-color: #22c55e;"></span>
+            </button>
+            <button type="button" class="swatch-btn" data-mode="cyan" data-color="#00e5ff" title="Electric Cyan">
+              <span class="swatch-preview" style="background-color: #00e5ff;"></span>
+            </button>
+            <button type="button" class="swatch-btn" data-mode="orange" data-color="#ff7538" title="Neon Orange">
+              <span class="swatch-preview" style="background-color: #ff7538;"></span>
+            </button>
+            <button type="button" class="swatch-btn swatch-custom-btn" id="customColorBtn" data-mode="custom" title="Custom Color Picker">
+              <span class="swatch-preview swatch-custom-indicator" id="customColorIndicator" style="background-color: #9146ff;">
+                <svg class="swatch-pipette-icon" viewBox="0 0 24 24" width="12" height="12">
+                  <path d="M20.71 5.63l-2.34-2.34a1 1 0 0 0-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.92-1.92 3.12-3.12a1 1 0 0 0 .01-1.42zM6.92 19H5v-1.92l8.06-8.06 1.92 1.92L6.92 19z"/>
+                </svg>
+              </span>
+            </button>
+          </div>
+
+          <!-- In-Popup Custom Color Picker Panel -->
+          <div class="custom-color-panel hidden" id="customColorPanel">
+            <div class="custom-chips-row">
+              <button type="button" class="color-chip" data-color="#ef4444" style="background-color: #ef4444;" title="Red"></button>
+              <button type="button" class="color-chip" data-color="#f97316" style="background-color: #f97316;" title="Orange"></button>
+              <button type="button" class="color-chip" data-color="#eab308" style="background-color: #eab308;" title="Yellow"></button>
+              <button type="button" class="color-chip" data-color="#84cc16" style="background-color: #84cc16;" title="Lime"></button>
+              <button type="button" class="color-chip" data-color="#22c55e" style="background-color: #22c55e;" title="Green"></button>
+              <button type="button" class="color-chip" data-color="#06b6d4" style="background-color: #06b6d4;" title="Cyan"></button>
+              <button type="button" class="color-chip" data-color="#3b82f6" style="background-color: #3b82f6;" title="Blue"></button>
+              <button type="button" class="color-chip" data-color="#9146ff" style="background-color: #9146ff;" title="Purple"></button>
+              <button type="button" class="color-chip" data-color="#ec4899" style="background-color: #ec4899;" title="Pink"></button>
+              <button type="button" class="color-chip" data-color="#ffffff" style="background-color: #ffffff;" title="White"></button>
+            </div>
+            <div class="picker-bottom-row">
+              <span class="custom-preview-dot" id="pickerPreviewDot" title="Current shade preview"></span>
+              <div class="shade-slider-track">
+                <input type="range" id="customShadeSlider" min="0" max="100" value="50" class="shade-slider" title="Drag left for darker shades, right for lighter shades">
+              </div>
+              <div class="custom-hex-box">
+                <span class="custom-hex-prefix">#</span>
+                <input type="text" id="customHexInput" class="custom-hex-input" maxlength="6" placeholder="9146FF" spellcheck="false" title="Hex code">
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Tab 3: Audio & Controls (Audio, Shortcuts) -->
+      <div class="tab-pane" id="tab-audio">
+        <!-- Audio Options -->
+        <section class="section">
+          <span class="section-title">Audio & Sound</span>
+          
+          <label class="toggle-row">
+            <span class="toggle-label">Mute previews by default</span>
+            <input type="checkbox" id="defaultMuted" checked>
+            <span class="switch"></span>
+          </label>
+
+          <div class="slider-group" id="volumeGroup">
+            <label class="slider-title">
+              <span>Volume</span>
+              <span id="volumeDisplay" class="value-badge">80%</span>
+            </label>
+            <div class="slider-wrapper">
+              <input type="range" id="volumeSlider" min="0" max="100" step="1" value="80">
+            </div>
+          </div>
+        </section>
+
+        <!-- Shortcuts Guide -->
+        <section class="section">
+          <span class="section-title">Keyboard Shortcuts</span>
+          <footer class="shortcuts-footer">
+            <div class="shortcut-item"><kbd>M</kbd> <span>Sound</span></div>
+            <div class="shortcut-item"><kbd>T</kbd> <span>Together</span></div>
+            <div class="shortcut-item"><kbd>P</kbd> <span>Pin</span></div>
+            <div class="shortcut-item"><kbd>S</kbd> <span>Swap</span></div>
+            <div class="shortcut-item"><kbd>Esc</kbd> <span>Close</span></div>
+          </footer>
+        </section>
+      </div>
     </main>
   </div>
 

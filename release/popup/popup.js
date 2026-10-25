@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     sidebarOnly: document.getElementById("sidebarOnly"),
     enabledTwitch: document.getElementById("enabledTwitch"),
     enabledKick: document.getElementById("enabledKick"),
+    hoverBorderEnabled: document.getElementById("hoverBorderEnabled"),
     tiledBorderEnabled: document.getElementById("tiledBorderEnabled"),
     tiledBorderOptions: document.getElementById("tiledBorderOptions"),
     borderModeDisplay: document.getElementById("borderModeDisplay"),
@@ -103,11 +104,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     sidebarOnly: true,
     enabledTwitch: true,
     enabledKick: true,
+    hoverBorderEnabled: true,
     tiledBorderEnabled: true,
     tiledBorderMode: "distinct",
     tiledBorderCustomColor: "#9146ff",
     tiledBorderBaseColor: "#9146ff",
-    tiledBorderShade: 50
+    tiledBorderShade: 50,
+    lastActiveTab: "general"
   };
 
   let config = { ...DEFAULTS };
@@ -119,6 +122,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         config = { ...config, ...stored };
       }
     } catch (_) {}
+  }
+
+  // Segmented Tab Navigation
+  const tabBtns = document.querySelectorAll(".tab-btn");
+  const tabPanes = document.querySelectorAll(".tab-pane");
+
+  function switchTab(targetTab) {
+    if (!targetTab) return;
+    const targetPane = document.getElementById(`tab-${targetTab}`);
+    if (!targetPane) return;
+    tabBtns.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.tab === targetTab);
+    });
+    tabPanes.forEach((pane) => {
+      pane.classList.toggle("active", pane.id === `tab-${targetTab}`);
+    });
+    saveConfig({ lastActiveTab: targetTab });
+  }
+
+  tabBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      switchTab(btn.dataset.tab);
+    });
+  });
+
+  if (config.lastActiveTab) {
+    switchTab(config.lastActiveTab);
   }
 
   // Validate previewWidth from storage
@@ -157,11 +187,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function updateBorderUI(enabled, mode, customColor, baseColor, shadeVal) {
+    const hoverOn = config.hoverBorderEnabled !== false;
+    const tiledOn = config.tiledBorderEnabled !== false;
+    const anyEnabled = enabled !== undefined ? enabled : (hoverOn || tiledOn);
+
+    if (elements.hoverBorderEnabled) {
+      elements.hoverBorderEnabled.checked = hoverOn;
+    }
     if (elements.tiledBorderEnabled) {
-      elements.tiledBorderEnabled.checked = enabled !== false;
+      elements.tiledBorderEnabled.checked = tiledOn;
     }
     if (elements.tiledBorderOptions) {
-      elements.tiledBorderOptions.classList.toggle("disabled", enabled === false);
+      elements.tiledBorderOptions.classList.toggle("disabled", !anyEnabled);
     }
 
     const effectiveCustom = customColor || config.tiledBorderCustomColor || "#9146ff";
@@ -175,7 +212,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const isCustomMode = mode === "custom";
 
     if (elements.customColorPanel) {
-      elements.customColorPanel.classList.toggle("hidden", !isCustomMode || enabled === false);
+      elements.customColorPanel.classList.toggle("hidden", !isCustomMode || !anyEnabled);
     }
 
     if (elements.pickerPreviewDot) {
@@ -238,7 +275,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateQualityUI(config.previewQualityMode);
   updateVolumeUI(config.defaultVolume);
   updateDelayUI(config.hoverDelayMs);
-  updateBorderUI(config.tiledBorderEnabled, config.tiledBorderMode, config.tiledBorderCustomColor, config.tiledBorderBaseColor, config.tiledBorderShade);
+  updateBorderUI(undefined, config.tiledBorderMode, config.tiledBorderCustomColor, config.tiledBorderBaseColor, config.tiledBorderShade);
   elements.defaultMuted.checked = config.defaultMuted;
   if (elements.showStatsBadge) {
     elements.showStatsBadge.checked = config.showStatsBadge !== false;
@@ -271,7 +308,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const effectiveBase = (baseColor || cleanHex).toUpperCase();
     const effectiveShade = shadeVal !== undefined ? shadeVal : 50;
 
-    updateBorderUI(config.tiledBorderEnabled, "custom", cleanHex, effectiveBase, effectiveShade);
+    updateBorderUI(undefined, "custom", cleanHex, effectiveBase, effectiveShade);
     saveConfig({
       tiledBorderMode: "custom",
       tiledBorderCustomColor: cleanHex,
@@ -280,12 +317,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Dual+ Border controls
+  // Border controls
+  if (elements.hoverBorderEnabled) {
+    elements.hoverBorderEnabled.addEventListener("change", (e) => {
+      const hoverOn = e.target.checked;
+      saveConfig({ hoverBorderEnabled: hoverOn });
+      updateBorderUI(undefined, config.tiledBorderMode, config.tiledBorderCustomColor, config.tiledBorderBaseColor, config.tiledBorderShade);
+    });
+  }
+
   if (elements.tiledBorderEnabled) {
     elements.tiledBorderEnabled.addEventListener("change", (e) => {
-      const enabled = e.target.checked;
-      updateBorderUI(enabled, config.tiledBorderMode, config.tiledBorderCustomColor, config.tiledBorderBaseColor, config.tiledBorderShade);
-      saveConfig({ tiledBorderEnabled: enabled });
+      const tiledOn = e.target.checked;
+      saveConfig({ tiledBorderEnabled: tiledOn });
+      updateBorderUI(undefined, config.tiledBorderMode, config.tiledBorderCustomColor, config.tiledBorderBaseColor, config.tiledBorderShade);
     });
   }
 
@@ -294,7 +339,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (btn.id === "customColorBtn") return;
       btn.addEventListener("click", () => {
         const mode = btn.dataset.mode;
-        updateBorderUI(config.tiledBorderEnabled, mode, config.tiledBorderCustomColor, config.tiledBorderBaseColor, config.tiledBorderShade);
+        updateBorderUI(undefined, mode, config.tiledBorderCustomColor, config.tiledBorderBaseColor, config.tiledBorderShade);
         saveConfig({ tiledBorderMode: mode });
       });
     });
@@ -311,6 +356,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           config.tiledBorderBaseColor || config.tiledBorderCustomColor || "#9146ff",
           config.tiledBorderShade !== undefined ? config.tiledBorderShade : 50
         );
+      }
+      if (elements.customColorPanel && !elements.customColorPanel.classList.contains("hidden")) {
+        elements.customColorPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     });
   }
